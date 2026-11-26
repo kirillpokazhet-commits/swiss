@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swiss Deutsch</title>
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="icon" type="image/png" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Swiss Deutsch">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="./style.css?v=swiss-deutsch">
+<script defer src="./ukrainian.js?v=three-sections"></script>
+<script defer src="./ukrainian-courses.js?v=1"></script>
+<script defer src="./language.js?v=uk-courses"></script>
+<script defer src="./course.js?v=three-sections"></script>
+<script defer src="./polyglot-course.js?v=7"></script>
+<script defer src="./polyglot-theory.js?v=4"></script>
+<script defer src="./polyglot-practice.js?v=uk"></script>
+<script defer src="./polyglot.js?v=swiss-deutsch"></script>
+<script defer src="./grammar-course.js?v=2-journeys"></script>
+<script defer src="./grammar-materials.js?v=2"></script>
+<script defer src="./grammar.js?v=three-sections"></script>
+<script defer src="./app.js?v=swiss-deutsch"></script>
+<body>
+  <main class="layout">
+    <div class="masthead">
+      <a class="wordmark" href="#home"><span class="swiss-cross" aria-hidden="true"></span> Swiss Deutsch</a>
+      <nav class="language-links" aria-label="Язык курса">
+        <a href="?lang=ru" data-language="ru" lang="ru">Русский</a>
+        <a href="?lang=uk" data-language="uk" lang="uk">Українська</a>
+      </nav>
+    </div>
+    <header id="hero"></header>
+    <nav class="hub-list" id="course-sections" aria-label="Разделы сайта" hidden>
+      <a class="destination destination-main destination-with-icon" href="#polyglot">
+        <span class="mode-icon mode-icon-learn" aria-hidden="true"></span>
+        <span><strong>Немецкий шаг за шагом</strong><small>16 уроков с теорией и практикой</small></span>
+        <span class="menu-arrow" aria-hidden="true"></span>
+      </a>
+      <a class="destination destination-with-icon" href="#grammar-course">
+        <span class="mode-icon mode-icon-grammar" aria-hidden="true"></span>
+        <span><strong>Грамматика с нуля</strong><small>50 тем в любом порядке, поиск и практика</small></span>
+        <span class="menu-arrow" aria-hidden="true"></span>
+      </a>
+      <a class="destination destination-with-icon" href="#words">
+        <span class="mode-icon mode-icon-words" aria-hidden="true"></span>
+        <span><strong>Учить слова</strong><small>Карточки Schritte A1.1 с интервальным повторением</small></span>
+        <span class="menu-arrow" aria-hidden="true"></span>
+      </a>
+    </nav>
+    <div id="overview" hidden>
+      <section class="home-modes" aria-label="Режимы занятий">
+        <a class="destination destination-main destination-with-icon" id="learn-link" href="#1">
+          <span class="mode-icon mode-icon-learn" aria-hidden="true"></span>
+          <span><strong id="learn-label">Начать курс</strong><small id="learn-summary"></small></span>
+          <span class="menu-arrow" aria-hidden="true"></span>
+        </a>
+        <a class="destination destination-with-icon" href="#words">
+          <span class="mode-icon mode-icon-words" aria-hidden="true"></span>
+          <span><strong>Учить слова</strong><small id="due-count"></small></span>
+          <span class="menu-arrow" aria-hidden="true"></span>
+        </a>
+        <a class="destination destination-with-icon" id="grammar-repeat" href="#repeat">
+          <span class="mode-icon mode-icon-repeat" aria-hidden="true"></span>
+          <span><strong>Повторение</strong><small id="repeat-summary"></small></span>
+          <span class="menu-arrow" aria-hidden="true"></span>
+        </a>
+        <a class="destination destination-with-icon" href="#final/grammar">
+          <span class="mode-icon mode-icon-grammar" aria-hidden="true"></span>
+          <span><strong>Грамматика A1.1</strong><small>Правила, таблицы и примеры</small></span>
+          <span class="menu-arrow" aria-hidden="true"></span>
+        </a>
+        <a class="destination destination-with-icon" href="#uznach">
+          <span class="mode-icon mode-icon-practice" aria-hidden="true"></span>
+          <span><strong>Практика · Уцнах</strong><small id="uznach-count">Три разговора на немецком</small></span>
+          <span class="menu-arrow" aria-hidden="true"></span>
+        </a>
+      </section>
+      <div class="course-progress">
+        <span>Прогресс курса</span><strong id="percent"></strong>
+      </div>
+      <section class="lesson-list" aria-labelledby="lesson-heading">
+        <h2 id="lesson-heading">Уроки</h2>
+        <nav id="lessons" aria-label="Уроки"></nav>
+      </section>
+      <a class="destination destination-with-icon final-entry" href="#final">
+        <span class="mode-icon mode-icon-grammar" aria-hidden="true"></span>
+        <span><strong>Итоги A1.1</strong><small id="final-summary">Тест, грамматика и повторение</small></span>
+        <span class="menu-arrow" aria-hidden="true"></span>
+      </a>
+      <details class="panel backup">
+        <summary>Резервная копия прогресса</summary>
+        <p>Скачай копию, чтобы перенести прогресс в другой браузер или восстановить его позже.</p>
+        <div class="actions"><button type="button" id="export-progress">Скачать копию</button></div>
+        <label for="backup-file">Файл для восстановления</label>
+        <input type="file" id="backup-file" accept=".json,application/json">
+        <p id="backup-status" role="status"></p>
+        <div class="actions" id="backup-confirm" hidden>
+          <button type="button" class="primary" id="restore-progress">Заменить прогресс</button>
+        </div>
+      </details>
+    </div>
+    <div id="lesson-view" hidden>
+      <nav class="tabs" id="sections" aria-label="Разделы лекции"></nav>
+      <section id="content" aria-labelledby="section-title"></section>
+      <p id="audio-status" role="status"></p>
+    </div>
+    <section id="polyglot-view" aria-label="Немецкий шаг за шагом" hidden></section>
+    <section id="grammar-view" aria-labelledby="grammar-title" hidden></section>
+    <p id="storage-message" role="status"></p>
+  </main>
+</body>
+</html>
