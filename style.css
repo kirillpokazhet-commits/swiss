@@ -330,6 +330,9 @@ h1 { font-size: clamp(2rem, 5vw, 3.55rem); line-height: 1.1; text-wrap: balance;
 .hint-word button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .word-gloss { margin-inline: .2em; padding: .15em .35em; border-radius: 4px; background: #e6e9ee; color: var(--ink); font-size: .9em; }
 .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-4); }
+.words-language { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-block: var(--space-3) var(--space-2); }
+.words-language button { min-height: 44px; padding: var(--space-2) var(--space-3); border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+.words-language button[aria-pressed="true"] { background: var(--soft); border-color: #a4a4a7; }
 .card-toolbar { min-height: 38px; }
 .card-toolbar .audio { margin: 0; }
 .card-study { border: 0; padding: 0; }
@@ -343,6 +346,7 @@ h1 { font-size: clamp(2rem, 5vw, 3.55rem); line-height: 1.1; text-wrap: balance;
 .flashcard.is-flipped .card-front { visibility: hidden; }
 .flashcard.is-flipped .card-back { visibility: visible; }
 .translation { font-size: clamp(1.1rem, 4vw, 1.35rem); }
+.card-note { display: block; }
 .card-example { line-height: 1.35; }
 .card-actions { margin-top: var(--space-4); }
 .ratings { display: grid; width: 100%; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
@@ -444,6 +448,7 @@ input[type="file"] { max-width: 100%; padding: var(--space-2); }
 .polyglot-lesson { display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); min-height: 56px; border-radius: 8px; padding: var(--space-3); background: var(--soft); }
 a.polyglot-lesson:hover { background: #ededee; }
 .polyglot-lesson.is-locked { background: var(--paper); border: 1px solid var(--line); color: var(--muted); }
+.polyglot-lesson-lock { display: grid; place-items: center; }
 .polyglot-lesson-number { font-variant-numeric: tabular-nums; color: var(--muted); }
 .polyglot-card > * + *, .polyglot-card [data-card-answer] ~ *, .polyglot-rule > * + *, .polyglot-final details { margin-block-start: var(--space-3); }
 .polyglot-card > div:empty { display: none; }
@@ -485,6 +490,7 @@ a.polyglot-lesson:hover { background: #ededee; }
 .polyglot-reference h4 { margin: var(--space-4) 0 var(--space-2); font-size: 1rem; }
 :is(.polyglot-reference, .polyglot-reference-inline) td { min-width: 4rem; }
 .polyglot-audio-status:empty { margin: 0; }
+.polyglot-question > .polyglot-audio-status:empty { position: absolute; }
 @media (max-width: 600px) {
   .polyglot-theory-examples { grid-template-columns: minmax(0, 1fr); }
 }

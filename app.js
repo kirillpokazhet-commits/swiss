@@ -284,7 +284,7 @@ function buildMainDeck() {
   const byWord = new Map();
   for (const card of course.flatMap(wordsFor)) {
     const identity = separateMeanings.has(card.key) ? card.key : card.word;
-    if (!byWord.has(identity)) byWord.set(identity, card);
+    if (!byWord.has(identity)) byWord.set(identity, { ...card, vocabulary: wordCardContent(card.translation) });
     cardKeys.set(card.key, byWord.get(identity).key);
   }
   return [...byWord.values()];
@@ -747,16 +747,16 @@ function avoidRepeatedFirst(cards) {
   try { localStorage.setItem(firstCardKey, previousFirstCard); } catch {}
 }
 
-function openWords() {
+function openWords(reverse = study?.reverse ?? false) {
   clearTimeout(reviewTimer);
-  const cards = reviewDeck;
+  const cards = reviewDeck.filter(card => card.reverse === reverse);
   const now = Date.now();
   const due = shuffle(cards.filter(card => saved.cards[card.key]?.due <= now));
   const fresh = shuffle(cards.filter(card => !saved.cards[card.key]));
   avoidRepeatedFirst(due.length ? due : fresh);
   study = {
     cards, queue: [...due, ...fresh.slice(0, 12)],
-    reviewed: 0, flipped: false
+    reviewed: 0, flipped: false, reverse
   };
   renderWords();
 }
@@ -766,6 +766,23 @@ const relativeTime = new Intl.RelativeTimeFormat(courseLanguage, { style: "short
 function formatReviewDelay(delay) {
   const [unit, size] = delay >= day ? ["day", day] : delay >= 60 * minute ? ["hour", 60 * minute] : ["minute", minute];
   return relativeTime.format(Math.max(1, Math.ceil(delay / size)), unit);
+}
+
+function wordCardContent(translation) {
+  const localized = courseText(translation);
+  // Glosses sometimes end in a bilingual example or a German abbreviation.
+  // Keep that material on the answer side and label each language separately.
+  const example = /^(.+?)(?:; |\. |, (?:например|наприклад),? | \((?:сокращение|скорочення) )(?:в выражении )?((?:\d+ )?\p{Script=Latin}.*?)(?: — (.+)|\))$/u.exec(localized);
+  if (!example) return { meaning: localized };
+  const [, meaning, german, explanation] = example;
+  return { meaning, german, explanation };
+}
+
+function wordCardNote({ german, explanation }) {
+  if (!german) return "";
+  return `<small class="card-note"><span lang="de-CH">${escapeHTML(german)}</span>${
+    explanation ? `<br><span lang="${courseLanguage}">${escapeHTML(explanation)}</span>` : ""
+  }</small>`;
 }
 
 function renderWords() {
@@ -778,8 +795,10 @@ function renderWords() {
     reviewTimer = setTimeout(() => openWords(), Math.min(Math.max(nextDue - now, 0), 2_147_483_647));
   }
   const planned = card && wordSchedule.preview(saved.cards[card.key], now);
+  const vocabulary = card?.vocabulary;
   const list = mainDeck.map(item => `
-    <dt><span lang="de-CH">${escapeHTML(item.word)}</span>${audioButton()}</dt><dd>${escapeHTML(item.translation)}</dd>`).join("");
+    <dt><span lang="de-CH">${escapeHTML(item.word)}</span>${audioButton()}</dt>
+    <dd><span lang="${courseLanguage}">${escapeHTML(item.vocabulary.meaning)}</span>${wordCardNote(item.vocabulary)}</dd>`).join("");
   const example = card && cardExample(card.front, card.lessonId);
   const panel = card ? `
     <div class="panel card-study">
@@ -788,12 +807,13 @@ function renderWords() {
       <button class="flashcard" type="button" data-action="reveal" aria-expanded="false" aria-controls="card-back">
         <span class="card-rotator">
           <span class="card-face card-front">
-            <strong lang="${card.reverse ? courseLanguage : "de-CH"}">${escapeHTML(card.reverse ? card.translation : card.front)}</strong><small>Нажми, чтобы перевернуть</small>
+            <strong lang="${card.reverse ? courseLanguage : "de-CH"}">${escapeHTML(card.reverse ? vocabulary.meaning : card.front)}</strong><small>Нажми, чтобы перевернуть</small>
           </span>
           <span class="card-face card-back" id="card-back" aria-hidden="true">
-            <small lang="${card.reverse ? courseLanguage : "de-CH"}">${escapeHTML(card.reverse ? card.translation : card.front)}</small>
-            <strong class="translation" lang="${card.reverse ? "de-CH" : courseLanguage}">${escapeHTML(card.reverse ? card.front : card.translation)}</strong>
-            ${example ? `<span class="card-example" lang="de-CH">${escapeHTML(example)}</span>` : ""}
+            <small lang="${card.reverse ? courseLanguage : "de-CH"}">${escapeHTML(card.reverse ? vocabulary.meaning : card.front)}</small>
+            <strong class="translation" lang="${card.reverse ? "de-CH" : courseLanguage}">${escapeHTML(card.reverse ? card.front : vocabulary.meaning)}</strong>
+            ${wordCardNote(vocabulary)}
+            ${example && example !== vocabulary.german ? `<span class="card-example" lang="de-CH">${escapeHTML(example)}</span>` : ""}
             ${card.plural ? `<small lang="de-CH">${escapeHTML(card.plural)}</small>` : ""}
           </span>
         </span>
@@ -809,9 +829,13 @@ function renderWords() {
     ${newCount ? `<p>Новых карточек осталось: ${newCount}.</p>` : ""}
     ${Number.isFinite(nextDue) ? `<p>По расписанию: ${nextDue <= now ? "есть карточки к повторению" : formatReviewDelay(nextDue - now)}.</p>` : ""}
     ${newCount ? '<div class="actions"><button class="primary" data-action="scheduled-words">Следующая порция</button></div>' : ""}</div>`;
-  const description = `Интервальное повторение · ${mainDeck.length} слов и выражений`;
+  const description = `Интервальное повторение · ${courseText("Слов и выражений: #1", mainDeck.length)}`;
+  const direction = `<div class="words-language" role="group" aria-label="${courseText("Язык карточек")}">
+    <button type="button" data-action="word-language" data-language-front="de" aria-pressed="${!study.reverse}">${courseText("На немецком")}</button>
+    <button type="button" data-action="word-language" data-language-front="translation" aria-pressed="${study.reverse}">${courseLanguage === "uk" ? "Українською" : "На русском"}</button>
+  </div>`;
   const dictionary = `<details class="panel"><summary>Список слов</summary><dl>${list}</dl></details>`;
-  elements.content.innerHTML = `<p class="words-intro muted">${description}</p>${panel}${dictionary}`;
+  elements.content.innerHTML = `<p class="words-intro muted">${description}</p>${direction}${panel}${dictionary}`;
 }
 
 function showCardSide(button) {
@@ -822,7 +846,8 @@ function showCardSide(button) {
   button.querySelector(".card-back").setAttribute("aria-hidden", String(!study.flipped));
   const card = study.queue[0];
   document.getElementById("card-audio").hidden = card.reverse && !study.flipped;
-  document.getElementById("card-audio-text").textContent = (study.flipped && cardExample(card.front, card.lessonId)) || card.front;
+  const example = study.flipped && (card.vocabulary.german || cardExample(card.front, card.lessonId));
+  document.getElementById("card-audio-text").textContent = example || card.front;
 }
 
 async function flipCard(button) {
@@ -1153,6 +1178,13 @@ elements.content.addEventListener("click", event => {
     }
     case "speak": speak(button); break;
     case "word-hint": toggleWordHint(button); break;
+    case "word-language": {
+      const reverse = button.dataset.languageFront === "translation";
+      if (study?.reverse === reverse) break;
+      openWords(reverse);
+      focusContentControl("[data-action='word-language'][aria-pressed='true']");
+      break;
+    }
     case "scheduled-words": openWords(); focusContentControl("[data-action='reveal'], [data-words-status]"); break;
     case "reveal": void flipCard(button); break;
     case "rate-card": gradeCard(button.dataset.rating); focusContentControl("[data-action='reveal'], [data-action='scheduled-words'], [data-words-status]"); break;

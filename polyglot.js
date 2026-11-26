@@ -105,6 +105,13 @@ const polyglot = (() => {
     return '<a class="' + className + '" href="' + href + '">' + escapeHTML(text) + "</a>";
   }
 
+  function lockedLessonStatus() {
+    return '<span class="polyglot-lesson-lock">' +
+      '<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75">' +
+      '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>' +
+      '</svg><span class="sr-only">' + escapeHTML(courseText("Закрыт")) + "</span></span>";
+  }
+
   function renderHub(hero, first) {
     setTitle(hero, courseTitle, "", []);
     const passed = first - 1;
@@ -138,10 +145,10 @@ const polyglot = (() => {
           const opening = locked ? '<span class="polyglot-lesson is-locked">' :
             '<a class="polyglot-lesson" href="' + lessonLink(id) + '">';
           const percent = locked ? 0 : lessonPercent(id, lessonProgress);
-          const status = locked ? "Закрыт" :
-            id < first && percent < passPercent ? "Пройден" : percent + "%";
+          const status = locked ? lockedLessonStatus() :
+            "<small>" + (id < first && percent < passPercent ? "Пройден" : percent + "%") + "</small>";
           return "<li>" + opening + '<span class="polyglot-lesson-number">' + id + '</span><strong>' +
-            escapeHTML(lesson.title) + "</strong><small>" + status + "</small>" + (locked ? "</span>" : "</a>") + "</li>";
+            escapeHTML(lesson.title) + "</strong>" + status + (locked ? "</span>" : "</a>") + "</li>";
         }).join("");
         return '<section><h2>' + name + '</h2><ol class="polyglot-lesson-list" start="' + (index * 4 + 1) + '">' + list + "</ol></section>";
       }).join("") + (first < total ? '<p><small>Итоговая практика откроется после урока 16.</small></p>' : "");
@@ -373,6 +380,14 @@ const polyglot = (() => {
 
   const speaker = text => '<button type="button" data-polyglot="speak" data-text="' + escapeAttribute(text) +
     '" aria-label="' + escapeAttribute(courseText("Слушать #1", text)) + '">Слушать</button>';
+  const audioStatus = '<p class="muted polyglot-audio-status" role="status"></p>';
+
+  function speechSequence(...parts) {
+    const phrases = [...new Set(parts.filter(Boolean))];
+    return phrases.map((phrase, index) =>
+      index === phrases.length - 1 || /[.!?…]$/u.test(phrase) ? phrase : phrase + ".").join(" ");
+  }
+
   function escapeAttribute(text) {
     return escapeHTML(text).replace(/"/gu, "&quot;");
   }
@@ -431,10 +446,11 @@ const polyglot = (() => {
       '</h2><div>' + (deck.revealed ? '<p data-card-answer tabindex="-1" lang="' + (reverse ? "de" : courseLanguage) + '">' + escapeHTML(answer) +
       '</p><p lang="de">' + escapeHTML(example) + "</p>" + (verb ? '<p class="muted" lang="de">ich ' + escapeHTML(verb.forms[0]) +
       ' · du ' + escapeHTML(verb.forms[1]) + ' · er ' + escapeHTML(verb.forms[2]) +
-      (current.id > 1 ? ' · ' + escapeHTML(verb.auxiliary + " + " + verb.participle) : "") + "</p>" : "") + speaker(term) : "") +
-      '</div><p class="muted polyglot-audio-status" role="status"></p><div class="polyglot-actions">' + (deck.revealed ?
+      (current.id > 1 ? ' · ' + escapeHTML(verb.auxiliary + " + " + verb.participle) : "") + "</p>" : "") : "") +
+      '</div>' + audioStatus + '<div class="polyglot-actions">' + (deck.revealed ?
         '<button class="primary" type="button" data-polyglot="next-card">' + (deck.index + 1 === deck.order.length ? "Завершить круг" : "Следующая карточка") + "</button>" :
         '<button class="primary" type="button" data-polyglot="reveal">Показать ответ</button>') +
+      (!reverse || deck.revealed ? speaker(speechSequence(term, deck.revealed ? example : "")) : "") +
       '</div></div>';
   }
 
@@ -528,17 +544,26 @@ const polyglot = (() => {
     const mode = question.instruction ?? {
       choice: "Вставь слово", build: "Собери фразу", type: "Напиши по-немецки"
     }[question.type];
+    const showingFeedback = active.feedback && !current.correcting;
+    const promptSpeech = showingFeedback ? "" : practicePromptSpeech(question);
     body.innerHTML = status + header + (passed && !active.feedback ? '<div class="polyglot-actions">' + onwardLink() + '</div>' : "") +
       '<article class="panel exercise-panel polyglot-question">' +
       '<h2 tabindex="-1">' + mode + "</h2>" +
       (question.prompt ? "<p>" + escapeHTML(question.prompt) + "</p>" : "") +
       (question.detail ? '<p class="polyglot-detail"' + (question.type === "choice" ? ' lang="de"' : "") +
         ">" + escapeHTML(question.detail) + "</p>" : "") +
-      (active.feedback && !current.correcting ? feedback(question, active, passed, percent) :
+      (promptSpeech ? '<div class="polyglot-actions">' + speaker(promptSpeech) + '</div>' : "") +
+      (showingFeedback ? feedback(question, active, passed, percent) :
         (current.correcting ? '<p class="muted">Исправь ответ. Процент растёт после верного ответа на другом примере.</p>' : "") +
         '<form aria-label="' + mode + '">' +
         answerControls(question, active.draft?.input ?? "") + '<div class="polyglot-actions"><button class="primary" type="submit"' +
-        (ready ? '' : ' disabled') + '>Проверить</button></div></form>') + "</article>";
+        (ready ? '' : ' disabled') + '>Проверить</button></div></form>') + audioStatus + "</article>";
+  }
+
+  function practicePromptSpeech(question) {
+    if (question.type === "choice" && question.detail) return question.detail;
+    if (question.verb) return question.verb.term;
+    return question.type === "type" ? "" : speechSequence(...current.options);
   }
 
   function trayButtons() {
@@ -575,6 +600,7 @@ const polyglot = (() => {
     const reference = question.fullAnswer ?? question.answer;
     const translatedChoice = question.id.startsWith("word-de-");
     const language = translatedChoice ? courseLanguage : "de";
+    const answerAudio = speaker(translatedChoice ? question.wordTerm : reference);
     const ownAnswer = !result.correct ? '<p>Твой ответ: <span lang="' + language + '"' +
       (translatedChoice ? "" : " data-user-text") + '>' + escapeHTML(result.answer) + "</span></p>" : "";
     const verb = question.verb;
@@ -593,7 +619,7 @@ const polyglot = (() => {
         '<p>Образец <span lang="de">' + escapeHTML(reference) + '</span></p>' +
         '<p>Проверь смысл и форму, которую тренирует задание.</p></div><div class="polyglot-actions">' +
         '<button type="button" class="primary" data-polyglot="accept-translation">Мой вариант подходит</button>' +
-        '<button type="button" data-polyglot="review-translation">Дать новый пример</button>' + reviewLink + '</div>';
+        answerAudio + '<button type="button" data-polyglot="review-translation">Дать новый пример</button>' + reviewLink + '</div>';
     }
     return '<div class="polyglot-feedback ' + (result.correct ? "feedback-correct" : "polyglot-incorrect") + '" role="status" tabindex="-1">' +
       '<strong>' + (result.selfChecked ? "Зачтено после сверки" : result.correct ? "Верно" : "Разберём ошибку") + '</strong>' + ownAnswer +
@@ -605,7 +631,7 @@ const polyglot = (() => {
       '<div class="polyglot-actions">' + (passed ? onwardLink() : "") +
       '<button ' + (passed ? "" : 'class="primary" ') + 'type="button" data-polyglot="advance">' +
       (percent === 100 ? "Посмотреть итог" : passed ? "Продолжить практику" : "Дальше") + "</button>" +
-      (result.correct ? "" : (active.correction ? "" : '<button type="button" data-polyglot="correct">Исправить ответ</button>') + reviewLink) + "</div>";
+      answerAudio + (result.correct ? "" : (active.correction ? "" : '<button type="button" data-polyglot="correct">Исправить ответ</button>') + reviewLink) + "</div>";
   }
 
   function updateWords(button, action) {

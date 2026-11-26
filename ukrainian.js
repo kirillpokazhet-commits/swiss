@@ -1,5 +1,8 @@
 // Ukrainian display strings. Keep German examples and answer keys in course.js.
 const ukrainianMessages = {
+  "Язык карточек": "Мова карток",
+  "На немецком": "Німецькою",
+  "Слов и выражений: #1": "Слів і виразів: #1",
   "Deutsch — личный тренажёр": "Deutsch — тренажер з німецької",
   "Немецкий язык": "Німецька мова",
   "Немецкий шаг за шагом": "Німецька крок за кроком",
