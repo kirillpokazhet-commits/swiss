@@ -1,5 +1,8 @@
 const polyglot = (() => {
-  const { passPercent, makeBank, shuffleItems, newMastery, masteryPercent, passedPreviousBank, recordAttempt, nextQuestion, migrateRound } = polyglotPractice;
+  const {
+    passPercent, minimumCredits, makeBank, shuffleItems, newMastery, masteryPercent, masteryStats,
+    passedPreviousBank, upgradeMastery, recordAttempt, nextQuestion, migrateRound
+  } = polyglotPractice;
   const root = document.getElementById("polyglot-view");
   const keyPrefix = "deutsch-a11.polyglot.v1.";
   const sections = { theory: "Теория", practice: "Практика", words: "Слова" };
@@ -48,22 +51,18 @@ const polyglot = (() => {
   }
 
   function getMastery(id, progress) {
-    return progress.mastery ?? (progress.round ? migrateRound(getBank(id), progress.round) : null);
-  }
-
-  function lessonPercent(id, progress) {
-    const mastery = getMastery(id, progress);
-    return mastery ? masteryPercent(getBank(id), mastery) : 0;
+    if (progress.mastery) return upgradeMastery(getBank(id), progress.mastery);
+    return progress.round ? migrateRound(getBank(id), progress.round) : null;
   }
 
   function passedEarlier(id, progress) {
     return progress.passed || (progress.best ?? 0) >= 90 ||
-      (!progress.topicPractice && passedPreviousBank(polyglotCourse[id - 1], progress.mastery));
+      (progress.mastery && passedPreviousBank(polyglotCourse[id - 1], getBank(id), progress.mastery));
   }
 
   function saveMastery(id, progress, mastery) {
     delete progress.round;
-    const passed = passedEarlier(id, progress) || masteryPercent(getBank(id), mastery) >= passPercent;
+    const passed = passedEarlier(id, progress) || masteryStats(getBank(id), mastery).passed;
     saveProgress(id, { ...progress, mastery, topicPractice: true, passed });
   }
 
@@ -71,7 +70,8 @@ const polyglot = (() => {
     return polyglotCourse.flatMap((_, index) => {
       const id = index + 1;
       const progress = getProgress(id);
-      return passedEarlier(id, progress) || lessonPercent(id, progress) >= passPercent ? [id] : [];
+      const mastery = getMastery(id, progress);
+      return passedEarlier(id, progress) || (mastery && masteryStats(getBank(id), mastery).passed) ? [id] : [];
     });
   }
 
@@ -105,53 +105,58 @@ const polyglot = (() => {
     return '<a class="' + className + '" href="' + href + '">' + escapeHTML(text) + "</a>";
   }
 
-  function lockedLessonStatus() {
-    return '<span class="polyglot-lesson-lock">' +
+  function lessonStatus(locked) {
+    const icon = locked
+      ? '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'
+      : '<path d="m5 12 4 4L19 6" stroke-linecap="round" stroke-linejoin="round"/>';
+    return '<span class="' + (locked ? "polyglot-lesson-lock" : "polyglot-lesson-check") + '">' +
       '<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75">' +
-      '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>' +
-      '</svg><span class="sr-only">' + escapeHTML(courseText("Закрыт")) + "</span></span>";
+      icon + '</svg><span class="sr-only">' + escapeHTML(courseText(locked ? "Закрыт" : "Пройден")) + "</span></span>";
+  }
+
+  function currentLessonRow(lesson, id) {
+    const progress = getProgress(id);
+    const hasPractice = Boolean(progress.mastery || progress.round);
+    const savedTab = Object.hasOwn(sections, progress.tab) ? progress.tab : null;
+    const tab = savedTab ?? (hasPractice ? "practice" : progress.deck ? "words" : "theory");
+    const started = Boolean(savedTab || hasPractice || progress.deck);
+    const mastery = getMastery(id, progress);
+    const percent = masteryPercent(getBank(id), mastery);
+    const stats = masteryStats(getBank(id), mastery);
+    const unlock = id === polyglotCourse.length
+      ? courseText("Заверши зачёт, чтобы открыть итоговую практику.")
+      : courseText("Заверши зачёт, чтобы открыть следующий урок.");
+    return '<li class="polyglot-current-row" aria-current="step"><div class="polyglot-lesson is-current">' +
+      '<span class="polyglot-lesson-number">' + id + '</span><div class="polyglot-current-content">' +
+      "<h3>" + escapeHTML(lesson.title) + "</h3>" +
+      '<div class="polyglot-current-progress"><small>' + escapeHTML(creditLabel(stats)) + '</small>' +
+      '<progress class="polyglot-progress" value="' + percent + '" max="100" aria-label="' + escapeAttribute(courseText("Освоение урока")) + '"></progress>' +
+      '<small>' + escapeHTML(unlock) + "</small></div>" +
+      link(lessonLink(id, tab), courseText(started ? "Продолжить" : "Начать урок"), "button primary") +
+      "</div></div></li>";
   }
 
   function renderHub(hero, first) {
-    setTitle(hero, courseTitle, "", []);
     const passed = first - 1;
     const total = polyglotCourse.length;
     const complete = passed === total;
-    const progress = complete ? {} : getProgress(first);
-    const startedPractice = Boolean(progress.mastery || progress.round);
-    const nextTab = startedPractice || progress.tab === "practice" ? "practice" :
-      progress.tab === "words" ? "words" : "theory";
-    const primaryLabel = complete ? "Итоговая практика" : {
-      practice: (startedPractice ? "Продолжить" : "Начать") + " практику урока " + first,
-      words: "К словам урока " + first,
-      theory: (progress.tab ? "Продолжить" : "Начать") + " урок " + first
-    }[nextTab];
-    const nextHref = complete ? courseLink + "/final" : lessonLink(first, nextTab);
-    const unlock = complete ? "" : " · " + (first === total ? "Итоговая практика откроется" : "Урок " + (first + 1) + " откроется") +
-      " при " + passPercent + "% в уроке " + first;
+    hero.innerHTML = courseNavigation() + "<h1>" + escapeHTML(courseTitle) + '</h1><p class="polyglot-course-summary">' +
+      escapeHTML(courseText("Пройдено #1 из #2 уроков", passed, total)) + "</p>";
     const groups = ["Знакомство, работа и встречи", "Повседневные ситуации", "Строим и уточняем фразы", "Выражаемся точнее"];
-    const cardsLesson = polyglotCourse.map((_, index) => index + 1).slice(0, first)
-      .map(id => ({ id, deck: getProgress(id).deck })).filter(({ deck }) => deck && deck.index < deck.order?.length)
-      .sort((left, right) => (right.deck.updated ?? 0) - (left.deck.updated ?? 0))[0];
-    root.innerHTML = '<div class="polyglot-start">' + link(nextHref, primaryLabel, "button primary") +
-      (cardsLesson && !(cardsLesson.id === first && nextTab === "words")
-        ? link(lessonLink(cardsLesson.id, "words"), "Продолжить карточки · урок " + cardsLesson.id) : "") +
-      '<p class="muted">Пройдено ' + passed + ' из ' + total + ' уроков' + unlock + '</p></div>' +
+    root.innerHTML = (complete ? link(courseLink + "/final", "Итоговая практика", "button primary") : "") +
       groups.map((name, index) => {
         const list = polyglotCourse.slice(index * 4, index * 4 + 4).map((lesson, offset) => {
           const id = index * 4 + offset + 1;
-          const lessonProgress = getProgress(id);
+          if (id === first) return currentLessonRow(lesson, id);
           const locked = id > first;
           const opening = locked ? '<span class="polyglot-lesson is-locked">' :
             '<a class="polyglot-lesson" href="' + lessonLink(id) + '">';
-          const percent = locked ? 0 : lessonPercent(id, lessonProgress);
-          const status = locked ? lockedLessonStatus() :
-            "<small>" + (id < first && percent < passPercent ? "Пройден" : percent + "%") + "</small>";
-          return "<li>" + opening + '<span class="polyglot-lesson-number">' + id + '</span><strong>' +
-            escapeHTML(lesson.title) + "</strong>" + status + (locked ? "</span>" : "</a>") + "</li>";
+          return "<li>" + opening + '<span class="polyglot-lesson-number">' + id + '</span><span class="polyglot-lesson-name">' +
+            escapeHTML(lesson.title) + "</span>" + lessonStatus(locked) + (locked ? "</span>" : "</a>") + "</li>";
         }).join("");
-        return '<section><h2>' + name + '</h2><ol class="polyglot-lesson-list" start="' + (index * 4 + 1) + '">' + list + "</ol></section>";
-      }).join("") + (first < total ? '<p><small>Итоговая практика откроется после урока 16.</small></p>' : "");
+        return '<section class="polyglot-lesson-group"><h2>' + name + '</h2><ol class="polyglot-lesson-list" role="list" start="' +
+          (index * 4 + 1) + '">' + list + "</ol></section>";
+      }).join("");
   }
 
   function readingTopic(index) {
@@ -195,7 +200,7 @@ const polyglot = (() => {
   function renderLocked(hero, id, first) {
     const final = id === polyglotCourse.length + 1;
     setTitle(hero, final ? "Итоговая практика закрыта" : "Урок " + id + " пока закрыт",
-      "Достигни " + passPercent + "% освоения в практике урока " + first + ", чтобы продвинуться дальше.", [courseLink, courseTitle]);
+      courseText("Заверши зачёт в уроке #1, чтобы продвинуться дальше.", first), [courseLink, courseTitle]);
     root.innerHTML = link(lessonLink(first, "practice"), "К практике урока " + first, "button primary");
   }
 
@@ -424,8 +429,7 @@ const polyglot = (() => {
     return {
       order: [...completed, ...active, ...remaining],
       index: completed.size,
-      revealed: Boolean(active.length && saved.revealed),
-      updated: saved?.updated ?? Date.now()
+      revealed: Boolean(active.length && saved.revealed)
     };
   }
 
@@ -471,10 +475,17 @@ const polyglot = (() => {
     })[skill] ?? "";
   }
 
-  function masteryHeader(percent, previouslyPassed) {
-    const detail = percent >= passPercent ? "Урок пройден" : previouslyPassed ? "Ранее пройден" : "Переход при " + passPercent + "%";
-    return '<div class="practice-progress polyglot-mastery"><strong>Освоение ' + percent + '%</strong><span>' + detail +
-      '</span></div><progress class="polyglot-progress" aria-label="Освоение урока" value="' + percent + '" max="100"></progress>';
+  function creditLabel(stats) {
+    return courseText("Зачтено #1 из #2", Math.min(stats.earned, minimumCredits), minimumCredits);
+  }
+
+  function masteryHeader(percent, stats, previouslyPassed) {
+    const detail = stats.passed ? "Урок пройден" :
+      previouslyPassed ? "Ранее пройден" : stats.earned < minimumCredits ? "" :
+        !stats.covered ? "Закрепи оставшиеся правила." : courseText("Нужно не менее #1% верных ответов в последних 50 заданиях.", passPercent);
+    return '<div class="practice-progress polyglot-mastery"><strong>' + escapeHTML(creditLabel(stats)) +
+      '</strong>' + (detail ? '<span>' + escapeHTML(courseText(detail)) + '</span>' : "") +
+      '</div><progress class="polyglot-progress" aria-label="Освоение урока" value="' + percent + '" max="100"></progress>';
   }
 
   function skillLabel(question) {
@@ -504,19 +515,21 @@ const polyglot = (() => {
     const mastery = getMastery(id, progress);
     current.mastery = mastery;
     const percent = masteryPercent(bank, mastery);
+    const stats = masteryStats(bank, mastery);
     const previouslyPassed = passedEarlier(id, progress);
-    const passed = previouslyPassed || percent >= passPercent;
-    const header = masteryHeader(percent, previouslyPassed);
+    const passed = previouslyPassed || stats.passed;
+    const header = masteryHeader(percent, stats, previouslyPassed);
     const status = storageUnavailable ? '<p class="muted" role="status">Сохранение недоступно. Прогресс останется в этой вкладке до её закрытия.</p>' : "";
     if (!mastery) {
       body.innerHTML = status + header + '<div class="panel polyglot-card"><h2 tabindex="-1">Практика урока</h2>' +
-        '<p>Потренируй каждую тему на двух разных примерах. Если ошибёшься, прогресс сохранится, а похожее задание встретится позже.</p>' +
+        '<p>Реши 50 разных примеров с первой попытки. Для зачёта нужно потренировать каждое правило и правильно ответить на 43 из последних 50 заданий.</p>' +
         (passed ? '<div class="polyglot-actions">' + onwardLink() : '<div class="polyglot-actions">') +
         '<button ' + (passed ? "" : 'class="primary" ') + 'type="button" data-polyglot="start">Начать практику</button></div></div>';
       return;
     }
-    const needsQuestion = !bank.byId.has(mastery.active?.id) && (mastery.active || percent < 100);
-    if (!progress.topicPractice || !progress.mastery || needsQuestion) {
+    const savedQuestion = bank.byId.get(mastery.active?.id);
+    const needsQuestion = !savedQuestion || savedQuestion.kind === "words";
+    if (!progress.topicPractice || progress.mastery?.version !== mastery.version || needsQuestion) {
       if (needsQuestion) chooseActive(mastery);
       mastery.revision++;
       saveMastery(id, progress, mastery);
@@ -545,25 +558,18 @@ const polyglot = (() => {
       choice: "Вставь слово", build: "Собери фразу", type: "Напиши по-немецки"
     }[question.type];
     const showingFeedback = active.feedback && !current.correcting;
-    const promptSpeech = showingFeedback ? "" : practicePromptSpeech(question);
     body.innerHTML = status + header + (passed && !active.feedback ? '<div class="polyglot-actions">' + onwardLink() + '</div>' : "") +
       '<article class="panel exercise-panel polyglot-question">' +
       '<h2 tabindex="-1">' + mode + "</h2>" +
       (question.prompt ? "<p>" + escapeHTML(question.prompt) + "</p>" : "") +
-      (question.detail ? '<p class="polyglot-detail"' + (question.type === "choice" ? ' lang="de"' : "") +
+      (question.detail ? '<p class="polyglot-detail"' + (question.type === "choice" || question.format === "rewrite" ? ' lang="de"' : "") +
         ">" + escapeHTML(question.detail) + "</p>" : "") +
-      (promptSpeech ? '<div class="polyglot-actions">' + speaker(promptSpeech) + '</div>' : "") +
-      (showingFeedback ? feedback(question, active, passed, percent) :
-        (current.correcting ? '<p class="muted">Исправь ответ. Процент растёт после верного ответа на другом примере.</p>' : "") +
+      (question.answerStart && !showingFeedback ? '<p class="muted">' + escapeHTML(courseText("Начало: #1", question.answerStart)) + '</p>' : "") +
+      (showingFeedback ? feedback(question, active, passed) :
+        (current.correcting ? '<p class="muted">Исправь ответ. Для зачёта понадобится верный ответ на новом примере.</p>' : "") +
         '<form aria-label="' + mode + '">' +
-        answerControls(question, active.draft?.input ?? "") + '<div class="polyglot-actions"><button class="primary" type="submit"' +
+          answerControls(question, active.draft?.input ?? "") + '<div class="polyglot-actions"><button class="primary" type="submit"' +
         (ready ? '' : ' disabled') + '>Проверить</button></div></form>') + audioStatus + "</article>";
-  }
-
-  function practicePromptSpeech(question) {
-    if (question.type === "choice" && question.detail) return question.detail;
-    if (question.verb) return question.verb.term;
-    return question.type === "type" ? "" : speechSequence(...current.options);
   }
 
   function trayButtons() {
@@ -575,10 +581,16 @@ const polyglot = (() => {
     if (question.type === "type") return '<p class="muted" id="polyglot-writing-tip">Проверь заглавные буквы и знаки препинания.</p>' +
       '<label class="sr-only" for="polyglot-answer">Твой ответ</label>' +
       '<input id="polyglot-answer" name="answer" type="text" lang="de" autocomplete="off" spellcheck="false" aria-describedby="polyglot-writing-tip" required value="' + escapeAttribute(input) + '">';
-    if (question.type === "choice") {
+    if (question.type === "find" || question.type === "choice") {
       const language = question.id.startsWith("word-de-") ? courseLanguage : "de";
-      return '<div class="choices">' + current.options.map((option, index) => '<label class="choice"><input name="answer" type="radio" required value="' +
+      const choices = '<div class="choices">' + current.options.map((option, index) => '<label class="choice"><input name="answer" type="radio" required value="' +
         index + '"' + (input === String(index) ? ' checked' : '') + '><span lang="' + language + '">' + escapeHTML(option) + "</span></label>").join("") + "</div>";
+      if (question.type === "choice") return choices;
+      const parts = question.errorParts.map((part, index) =>
+        '<button type="button" lang="de" data-polyglot="find-part" data-index="' + index +
+        '" aria-pressed="' + current.selected.includes(index) + '">' + escapeHTML(part) + '</button>').join("");
+      return '<p>Нажми на слово или часть фразы с ошибкой.</p><div class="word-bank polyglot-find" role="group" aria-label="Фраза с ошибкой">' +
+        parts + '</div>' + (current.selected.length ? '<p>Выбери исправление.</p>' + choices : "");
     }
     const instructions = current.options.length > current.tokenCount ? '<p class="muted">Одно слово лишнее.</p>' : "";
     return instructions + '<div class="word-tray" role="group" aria-label="Собранная фраза">' + trayButtons() +
@@ -594,7 +606,7 @@ const polyglot = (() => {
       : link(lessonLink(id + 1), "Следующий урок", "button primary");
   }
 
-  function feedback(question, active, passed, percent) {
+  function feedback(question, active, passed) {
     const result = active.feedback;
     const reviewLink = link(lessonLink(current.id, "theory") + "/" + question.skill, "Открыть правило");
     const reference = question.fullAnswer ?? question.answer;
@@ -605,7 +617,9 @@ const polyglot = (() => {
       (translatedChoice ? "" : " data-user-text") + '>' + escapeHTML(result.answer) + "</span></p>" : "";
     const verb = question.verb;
     let tip = "";
-    if (question.ruleIndex !== undefined) {
+    if (question.type === "find") {
+      tip = courseText("Здесь вместо «#1» нужно сказать «#2».", question.wrong, question.answer);
+    } else if (question.ruleIndex !== undefined) {
       tip = current.lesson.rules[question.ruleIndex][1];
     } else if (question.skill === "build") {
       tip = skillHint(question.skill);
@@ -626,11 +640,10 @@ const polyglot = (() => {
       '<p>Ответ: <span lang="' + language + '">' + escapeHTML(reference) + "</span></p>" +
       (result.correct || !tip ? "" : '<p class="muted">' + escapeHTML(tip) + "</p>") +
       (active.correction === undefined ? "" : '<p>' + (active.correction ? "Исправленный ответ верный." : "Исправленный ответ пока неверный.") + "</p>") +
-      '<p class="muted">' + (result.gained ? "Освоение выросло до " + percent + "%." : "Освоение осталось на " + percent + "%.") +
-      (!result.correct && (current.mastery.earned[question.skill]?.length ?? 0) < 2 ? " Новый пример на этот навык появится позже." : "") + '</p></div>' +
+      (!result.correct ? '<p class="muted">Похожее задание встретится позже.</p>' : "") + '</div>' +
       '<div class="polyglot-actions">' + (passed ? onwardLink() : "") +
       '<button ' + (passed ? "" : 'class="primary" ') + 'type="button" data-polyglot="advance">' +
-      (percent === 100 ? "Посмотреть итог" : passed ? "Продолжить практику" : "Дальше") + "</button>" +
+      (passed ? "Продолжить практику" : "Дальше") + "</button>" +
       answerAudio + (result.correct ? "" : (active.correction ? "" : '<button type="button" data-polyglot="correct">Исправить ответ</button>') + reviewLink) + "</div>";
   }
 
@@ -656,7 +669,8 @@ const polyglot = (() => {
   }
 
   function matchesAnswer(question, answer) {
-    if (question.type !== "type") return normalizeAnswer(answer) === normalizeAnswer(question.answer);
+    if (question.type !== "type") return [question.answer, ...(question.variants ?? [])]
+      .some(variant => normalizeAnswer(answer) === normalizeAnswer(variant));
     const model = normalizeGermanWriting(question.answer);
     const written = normalizeGermanWriting(answer);
     const variants = (question.variants ?? []).map(normalizeGermanWriting);
@@ -688,10 +702,13 @@ const polyglot = (() => {
     event.preventDefault();
     const { question } = current;
     const input = new FormData(event.target).get("answer");
+    const choice = question.type === "choice" || question.type === "find";
     const answer = question.type === "build" ? current.selected.map(index => current.options[index]).join(" ") :
-      question.type === "choice" ? input === null ? "" : current.options[Number(input)] : input?.trim();
-    if (!answer || (question.type === "build" && current.selected.length !== current.tokenCount)) return;
-    const correct = question.type === "choice" ? answer === question.answer : matchesAnswer(question, answer);
+      choice ? input === null ? "" : current.options[Number(input)] : input?.trim();
+    if (!answer || (question.type === "build" && current.selected.length !== current.tokenCount) ||
+      (question.type === "find" && current.selected.length !== 1)) return;
+    const correct = choice ? answer === question.answer &&
+      (question.type !== "find" || current.selected[0] === question.errorIndex) : matchesAnswer(question, answer);
     if (current.correcting) {
       current.correcting = false;
       if (!updateMastery(mastery => {
@@ -705,7 +722,8 @@ const polyglot = (() => {
     }
     if (!updateMastery(mastery => {
       if (question.type === "type" && !correct) mastery.active.feedback = { answer, correct, compare: true };
-      else recordAnswer(mastery, answer, correct);
+      else recordAnswer(mastery, question.type === "find"
+        ? question.errorParts[current.selected[0]] + " → " + answer : answer, correct);
     })) return;
     renderPractice();
     root.querySelector(".polyglot-feedback")?.focus();
@@ -725,11 +743,11 @@ const polyglot = (() => {
         root.querySelector('[data-polyglot="reveal"]')?.focus();
         break;
       case "reveal":
-        saveDeck({ ...current.deck, revealed: true, updated: Date.now() });
+        saveDeck({ ...current.deck, revealed: true });
         root.querySelector("[data-card-answer]")?.focus();
         break;
       case "next-card":
-        saveDeck({ ...current.deck, index: current.deck.index + 1, revealed: false, updated: Date.now() });
+        saveDeck({ ...current.deck, index: current.deck.index + 1, revealed: false });
         root.querySelector('[data-polyglot="reveal"], [data-polyglot="restart-cards"]')?.focus();
         break;
       case "theory-topic": {
@@ -757,6 +775,15 @@ const polyglot = (() => {
       case "remove":
         updateWords(button, action);
         break;
+      case "find-part": {
+        const index = Number(button.dataset.index);
+        if (current.selected[0] === index) break;
+        current.selected = [index];
+        if (!saveDraft("")) return;
+        renderPractice();
+        root.querySelector('[data-polyglot="find-part"][aria-pressed="true"]')?.focus();
+        break;
+      }
       case "correct":
         current.selected = [];
         if (!updateMastery(mastery => {

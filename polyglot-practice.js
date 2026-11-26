@@ -1,6 +1,10 @@
 const polyglotPractice = (() => {
   const passPercent = 85;
-  const confirmations = 2;
+  const minimumCredits = 50;
+  const recentWindow = 50;
+  const minimumPerTopic = 5;
+  const minimumRecent = Math.ceil(recentWindow * passPercent / 100);
+  const version = 2;
   const people = [
     ["ich", "mich", "habe", "bin"], ["du", "dich", "hast", "bist"],
     ["er", "sich", "hat", "ist"], ["wir", "uns", "haben", "sind"],
@@ -47,6 +51,40 @@ const polyglotPractice = (() => {
     return { id, kind, label, prompt, answer, detail, type: "build" };
   }
 
+  function expandPattern(template) {
+    const group = /\[([^\]]+)\]/u.exec(template);
+    return group ? group[1].split("|").flatMap(value =>
+      expandPattern(template.slice(0, group.index) + value + template.slice(group.index + group[0].length))) : [template];
+  }
+
+  function patternQuestions(lesson, index) {
+    const patterns = polyglotPracticePatterns[index];
+    return patterns.flatMap(([ruleIndex, pattern], group) =>
+      expandPattern(pattern).flatMap((template, example) => {
+        const slot = /\{([^{}]+)\}/u.exec(template);
+        const [answer, ...alternatives] = slot[1].split("/");
+        const before = template.slice(0, slot.index);
+        const after = template.slice(slot.index + slot[0].length);
+        const fullAnswer = before + answer + after;
+        const id = "grammar-" + group + "-" + example;
+        const label = lesson.rules[ruleIndex][0];
+        const fill = {
+          ...choice(id, "rule", label, "", answer, alternatives, before + "…" + after),
+          fullAnswer, ruleIndex
+        };
+        const left = before.trim().split(/\s+/u).filter(Boolean);
+        const wrong = alternatives[example % alternatives.length];
+        const isLast = /^[.!?]$/u.test(after.trim());
+        const errorParts = [...left, isLast ? wrong + after.trim() : wrong, ...(isLast ? [] : after.trim().split(/\s+/u).filter(Boolean))];
+        const find = {
+          ...choice(id + "-find", "rule", label, "", answer, alternatives),
+          type: "find", instruction: "Найди ошибку", ruleIndex, fullAnswer,
+          errorParts, errorIndex: left.length, wrong
+        };
+        return [fill, find];
+      }));
+  }
+
   function makeBank(lesson) {
     const verbs = lesson.verbs.map(parseVerb);
     const words = [...lesson.words, ...verbs.map(verb => [verb.term, verb.translation, wordExample(verb), verb])];
@@ -63,14 +101,14 @@ const polyglotPractice = (() => {
       const choosePhrase = {
         ...choice("choose-phrase-" + key, "rule", label, prompt, fullAnswer,
           alternatives.map(option => template.replace(match[0], option))),
-        instruction: "Выбери подходящую фразу", ruleIndex
+        instruction: "Как ты скажешь по-немецки?", ruleIndex, format: "meaning"
       };
       const arrange = {
         ...build("phrase-" + key, "phrase", label, prompt, fullAnswer,
           /начни с/iu.test(prompt) ? "" : courseText("Начало: #1", fullAnswer.split(/\s+/u)[0])),
         instruction: fullAnswer.endsWith("?") ? "Задай вопрос" : undefined,
         distractors: alternatives.filter(option => !option.includes(" ")),
-        ruleIndex
+        ruleIndex, variants
       };
       return [pick, arrange, choosePhrase,
         { ...arrange, id: "write-" + key, kind: "write", type: "type", instruction: undefined, variants }];
@@ -129,6 +167,15 @@ const polyglotPractice = (() => {
       );
     }
 
+    const lessonIndex = polyglotCourse.indexOf(lesson);
+    questions.push(...patternQuestions(lesson, lessonIndex));
+    const [ruleIndex, instruction, source, answer] = polyglotPracticeRewrites[lessonIndex];
+    questions.push({
+      ...build("rewrite", "phrase", lesson.rules[ruleIndex][0], instruction, answer, source),
+      instruction: "Переделай фразу", format: "rewrite", ruleIndex,
+      answerStart: answer.split(/\s+/u)[0]
+    });
+
     const skills = new Map();
     for (const question of questions) {
       question.skill = question.ruleIndex !== undefined ? "rule-" + question.ruleIndex :
@@ -137,67 +184,108 @@ const polyglotPractice = (() => {
         question.fullAnswer ?? question.answer;
       question.variant = example.normalize("NFC").toLowerCase().replace(/ß/gu, "ss")
         .replace(/[^\p{L}\p{N}\s]/gu, "").replace(/\s+/gu, " ").trim();
+      question.format ??= question.type;
       if (!skills.has(question.skill)) skills.set(question.skill, []);
       skills.get(question.skill).push(question);
     }
-    return { words, skills, byId: new Map(questions.map(question => [question.id, question])) };
+    const grammar = questions.filter(question => question.kind !== "words" && question.type !== "type");
+    const topics = [...new Set(grammar.map(question => question.skill))];
+    return { words, skills, grammar, topics, byId: new Map(questions.map(question => [question.id, question])) };
   }
 
   function newMastery() {
-    return { earned: {}, seen: {}, reviews: {}, attempts: 0, revision: 0, active: null };
+    return { version, earned: {}, produced: {}, recent: [], formats: {}, seen: {}, reviews: {}, attempts: 0, revision: 0, active: null };
   }
 
   function masteryPercent(bank, mastery) {
-    if (!mastery) return 0;
-    return percentageForSkills([...bank.skills.keys()], mastery);
+    const stats = masteryStats(bank, mastery);
+    return stats.passed ? 100 : Math.min(99, Math.floor(100 * stats.earned / minimumCredits));
   }
 
-  function percentageForSkills(skills, mastery) {
+  function masteryStats(bank, mastery) {
+    const earned = bank.topics.reduce((total, skill) => total + (mastery?.earned[skill]?.length ?? 0), 0);
+    const recent = mastery?.recent ?? [];
+    const accurate = recent.length === recentWindow && recent.filter(Boolean).length >= minimumRecent;
+    const covered = bank.topics.every(skill => (mastery?.earned[skill]?.length ?? 0) >= minimumPerTopic &&
+      (!skill.startsWith("rule-") || mastery?.produced?.[skill]));
+    return { earned, accurate, covered, passed: earned >= minimumCredits && accurate && covered };
+  }
+
+  function passedLegacySkills(skills, mastery) {
     const earned = skills.reduce((total, skill) => total + (mastery.earned[skill]?.length ?? 0), 0);
-    return Math.floor(100 * earned / (skills.length * confirmations));
+    return Math.floor(100 * earned / (skills.length * 2)) >= passPercent;
   }
 
-  function passedPreviousBank(lesson, mastery) {
-    if (!mastery || lesson.verbPractice) return false;
+  function passedPreviousBank(lesson, bank, mastery) {
+    if (!mastery || mastery.version === version) return false;
+    if (passedLegacySkills([...bank.skills.keys()], mastery)) return true;
+    if (lesson.verbPractice) return false;
     // Older banks added the same conjugation skills to every lesson.
     const skills = [...lesson.rules.map((_, index) => "rule-" + index), "words", "present", "build"];
     if (lesson.pastPractice) skills.push("aux", "part", "perfect");
-    return percentageForSkills(skills, mastery) >= passPercent;
+    return passedLegacySkills(skills, mastery);
+  }
+
+  function upgradeMastery(bank, saved) {
+    if (!saved || saved.version === version) return saved;
+    const mastered = new Set();
+    const earned = {};
+    for (const skill of bank.topics) {
+      for (const question of bank.skills.get(skill)) {
+        if (mastered.has(question.variant) || !saved.earned?.[skill]?.includes(question.variant)) continue;
+        (earned[skill] ??= []).push(question.variant);
+        mastered.add(question.variant);
+      }
+    }
+    return { ...newMastery(), ...saved, version, earned, recent: [], produced: {}, formats: {} };
   }
 
   function recordAttempt(mastery, question, correct) {
-    const { skill, variant } = question;
-    const earned = mastery.earned[skill] ??= [];
+    const { skill, variant, format, type } = question;
+    if (question.kind === "words") return false;
     mastery.seen[variant] = ++mastery.attempts;
-    if (earned.length === confirmations) return false;
+    mastery.recent = [...mastery.recent, correct].slice(-recentWindow);
+    mastery.formats[format] = mastery.attempts;
     if (!correct) {
       mastery.reviews[skill] = { variant, due: mastery.attempts + 2 };
       return false;
     }
-    if (earned.includes(variant) || mastery.reviews[skill]?.variant === variant) return false;
-    earned.push(variant);
+    if (mastery.reviews[skill]?.variant === variant) return false;
     delete mastery.reviews[skill];
+    if (type === "build") mastery.produced[skill] = true;
+    if (Object.values(mastery.earned).some(variants => variants.includes(variant))) return false;
+    (mastery.earned[skill] ??= []).push(variant);
     return true;
   }
 
   function nextQuestion(bank, mastery) {
-    const skills = [...bank.skills.keys()];
     const count = skill => mastery.earned[skill]?.length ?? 0;
-    const remaining = skills.filter(skill => count(skill) < confirmations);
-    if (!remaining.length) return null;
-
+    const credited = new Set(Object.values(mastery.earned).flat());
     const review = skill => mastery.reviews[skill];
-    const due = remaining.filter(skill => review(skill)?.due <= mastery.attempts);
-    const fresh = remaining.filter(skill => !review(skill));
-    // Keep two other attempts between a mistake and a new example on its skill.
-    const eligible = due.length ? due : fresh.length ? fresh : skills.filter(skill => !remaining.includes(skill));
-    const pool = (eligible.length ? eligible : remaining).flatMap(skill =>
-      bank.skills.get(skill).filter(question => review(skill)?.variant !== question.variant &&
-        (count(skill) === confirmations || !mastery.earned[skill]?.includes(question.variant))));
-    return shuffleItems(pool).sort((left, right) =>
-      (due.length ? review(left.skill).due - review(right.skill).due : count(left.skill) - count(right.skill)) ||
-      (mastery.seen[left.variant] ?? 0) - (mastery.seen[right.variant] ?? 0)
-    )[0] ?? null;
+    const different = bank.grammar.filter(question => review(question.skill)?.variant !== question.variant);
+    const ready = different.filter(question => !review(question.skill) || review(question.skill).due <= mastery.attempts);
+    const rank = question => {
+      const { skill, variant, type, format } = question;
+      const needsBuild = skill.startsWith("rule-") && !mastery.produced[skill];
+      return [
+        review(skill)?.due <= mastery.attempts ? 0 : 1,
+        count(skill) < minimumPerTopic ? 0 : 1,
+        credited.has(variant) ? 1 : 0,
+        needsBuild && type === "build" ? 0 : 1,
+        mastery.formats[format] ?? 0,
+        mastery.seen[variant] ?? 0,
+        count(skill)
+      ];
+    };
+    const pool = ready.length ? ready : different;
+    const ordered = shuffleItems(pool).map(question => ({ question, rank: rank(question) }));
+    ordered.sort((left, right) => {
+      for (const [index, value] of left.rank.entries()) {
+        if (value !== right.rank[index]) return value - right.rank[index];
+      }
+      return 0;
+    });
+    return ordered[0]?.question ?? null;
   }
 
   function migrateRound(bank, round) {
@@ -205,7 +293,7 @@ const polyglotPractice = (() => {
     if (!Array.isArray(round?.order) || !Array.isArray(round.results)) return mastery;
     for (const [index, result] of round.results.entries()) {
       const question = bank.byId.get(round.order[index]);
-      if (!question || typeof result?.answer !== "string" || typeof result.correct !== "boolean") continue;
+      if (!question || question.kind === "words" || typeof result?.answer !== "string" || typeof result.correct !== "boolean") continue;
       const gained = recordAttempt(mastery, question, result.correct);
       if (round.pending && index === round.results.length - 1) {
         mastery.active = { id: question.id, feedback: { ...result, gained } };
@@ -218,5 +306,6 @@ const polyglotPractice = (() => {
     return mastery;
   }
 
-  return { passPercent, makeBank, shuffleItems, newMastery, masteryPercent, passedPreviousBank, recordAttempt, nextQuestion, migrateRound };
+  return { passPercent, minimumCredits, makeBank, shuffleItems, newMastery, masteryPercent, masteryStats,
+    passedPreviousBank, upgradeMastery, recordAttempt, nextQuestion, migrateRound };
 })();

@@ -1,3 +1,151 @@
+// Square brackets vary the context. Braces contain the correct form first,
+// followed by plausible mistakes on the same grammar rule.
+const polyglotPracticePatterns = [
+  [
+    [0, "Du {lernst/lernt/lernen} [heute|morgen|jetzt|auch] [Deutsch|hier|zu Hause|viel]."],
+    [1, "{Arbeitest/Arbeitet/Arbeiten} du [heute|morgen|jetzt|auch] [hier|dort|zu Hause|in Bern]?"],
+    [2, "Wir {arbeiten/arbeitet/arbeitest} [heute|morgen|jetzt|auch] [hier|dort|zu Hause|in Bern] nicht."],
+    [3, "Ich {heisse/heisst/heissen} [Mia|Leo|Anna|Paul|Lena|Eva|Nina|Tom|Maria|Emil|Lara|David]."]
+  ],
+  [
+    [0, "Du {siehst/seht/sehen} [heute|morgen|jetzt|auch] [den Bus|den Film|den Bahnhof|den Schlüssel]."],
+    [1, "Wir {sind/haben/ist} [gestern|heute|am Morgen|am Abend] nach [Bern|Basel|Zürich|Genf] gefahren."],
+    [2, "[Er|Leo|Paul|Tom] {arbeitet/arbeitest/arbeiten} als [Lehrer|Ingenieur|Verkäufer|Arzt]."]
+  ],
+  [
+    [0, "[Er|Sie|Mia|Leo] hilft {mir/mich/ich} [heute|morgen|jetzt|auch]."],
+    [0, "[Ich sehe|Wir sehen|Sie sieht|Leo sieht] {dich/dir/du} [hier|dort|heute|morgen]."],
+    [1, "Wann {kommt er/er kommt/kommen er} [heute|morgen|am Morgen|am Abend] [nach Hause|in die Stadt|zum Bahnhof|nach Bern]?"],
+    [1, "Wo {isst du/du isst/essen du} [heute|morgen|jetzt|normalerweise] [zu Mittag|zu Abend|mit Mia|mit Leo]?"],
+    [2, "[Das Buch|Der Schlüssel|Das Glas|Die Tasche] liegt [jetzt|heute|noch|auch] auf {dem/den/der} Tisch."],
+    [2, "[Ich stelle|Du stellst|Wir stellen|Sie stellt] [das Glas|den Stuhl|das Buch|die Tasche] vor {das/dem/der} Fenster."]
+  ],
+  [
+    [0, "Wir [arbeiten|lernen|essen|kommen] {am/um/im} [Montag|Dienstag|Mittwoch|Donnerstag|Samstag]."],
+    [0, "Wir [essen|kommen|gehen|arbeiten] {um/am/im} [acht|neun|zehn|elf]."],
+    [1, "Ich [lese|lerne|arbeite|esse], aber {er bleibt/bleibt er/er bleiben} [draussen|zu Hause|in Bern|hier]."],
+    [1, "[Ich gehe|Wir gehen|Leo geht|Mia geht] zum Arzt, denn {der Hals tut/tut der Hals/der Hals tun} [heute|seit gestern|noch|wieder] weh."],
+    [2, "[Ich fahre|Wir fahren|Er fährt|Sie fährt] [heute|morgen|am Montag|am Samstag] {nach/im/zum} [Bern|Basel|Zürich|Wien]."],
+    [2, "[Er kommt|Sie kommt|Wir kommen|Ich komme] [heute|morgen|jetzt|am Abend] {aus/aus dem/aus der} [Bern|Basel|Zürich|Wien]."]
+  ],
+  [
+    [0, "[Ich kaufe|Wir kaufen|Sie kauft|Er kauft] [zwei|drei|vier|fünf] {Äpfel/Apfel/Äpfeln}."],
+    [0, "[Ich sehe|Wir sehen|Sie sieht|Er sieht] [zwei|drei|vier|fünf] {Taschen/Tasche/Tasches}."],
+    [1, "[Ich sehe|Wir sehen|Sie sieht|Er sieht] den {Kunden/Kunde/Kundes} [hier|dort|heute|auch]."],
+    [1, "[Ich spreche|Wir sprechen|Er spricht|Sie spricht] [heute|morgen|jetzt|auch] mit {dem/den/der} Kunden."],
+    [2, "[Ich habe|Wir haben|Sie hat|Er hat] [gestern|heute|lange|auch] in Bern {studiert/gestudiert/studieren}."],
+    [2, "[Ich versuche|Wir versuchen|Sie versucht|Er versucht], [hier|dort|heute|morgen] Deutsch {zu lesen/lese/gelesen}."]
+  ],
+  [
+    [0, "Wir {erinnern/erinnert/erinnerst} uns [heute|jetzt|gern|oft] an [den Urlaub|den Besuch|das Essen|die Reise]."],
+    [0, "Ich setze {mich/mir/sich} [heute|jetzt|oft|gern] [ans Fenster|an den Tisch|auf den Stuhl|aufs Sofa]."],
+    [1, "[Heute|Morgen|Am Montag|Am Samstag] {kann er/er kann/kannst er} [kommen|arbeiten|gehen|bleiben]."],
+    [1, "Wir {wollen/will/wollt} [heute|morgen|jetzt|zusammen] [essen|kochen|lesen|lernen]."],
+    [2, "[Ich sehe|Wir sehen|Sie sieht|Leo sieht] [heute|morgen|jetzt|oft] {meinen/mein/meine} Bruder."],
+    [2, "Seit wann {sind deine/ist deine/sind deinen} Eltern [hier|in Bern|in Basel|im Urlaub|in Zürich|in Genf|in Wien|in Berlin]?"]
+  ],
+  [
+    [0, "[Der Zug|Der Bus] {fährt/fahrst/fahren} [um sechs|um sieben|um acht|um neun|um zehn|um elf|um zwölf|um zwei] ab."],
+    [0, "[Ich bin|Wir sind|Sie ist|Er ist] [früh|spät|pünktlich|gerade] {angekommen/geankommen/ankommen}."],
+    [1, "[Ich warte|Wir warten|Sie wartet|Er wartet] [heute|morgen|hier|dort] auf {den/dem/der} Bus."],
+    [1, "[Ich träume|Wir träumen|Sie träumt|Er träumt] [oft|manchmal|auch|noch] von {einer/eine/einen} Reise."],
+    [2, "[Ich gehe|Wir gehen|Sie geht|Er geht] [heute|morgen|jetzt|auch] {ins/in den/in die} Hotel."],
+    [2, "[Ich fahre|Wir fahren|Sie fährt|Er fährt] [heute|morgen|jetzt|auch] {zur/zum/zu den} Haltestelle."]
+  ],
+  [
+    [0, "[Ich suche|Wir suchen|Sie sucht|Er sucht] [hier|dort|heute|noch] {den/dem/der} Mantel."],
+    [0, "[Ich kaufe|Wir kaufen|Sie kauft|Er kauft] [hier|dort|heute|morgen] {das/dem/der} Hemd."],
+    [1, "[Ich brauche|Wir brauchen|Sie braucht|Er braucht] [heute|morgen|hier|auch] {einen/einem/einer} Mantel."],
+    [1, "[Ich kaufe|Wir kaufen|Sie kauft|Er kauft] [heute|morgen|hier|dort] {keine/keinen/keinem} Schuhe."],
+    [2, "[Das ist|Die Jacke ist|Das Hemd ist|Der Mantel ist] [heute|morgen|auch|nur] für {den/dem/der} Bruder."],
+    [2, "[Ich gehe|Wir gehen|Sie geht|Er geht] [heute|morgen|jetzt|oft] durch {den/dem/der} Park."]
+  ],
+  [
+    [0, "[Ich helfe|Wir helfen|Sie hilft|Er hilft] [heute|morgen|hier|oft] {dem/den/das} Kind."],
+    [0, "[Ich danke|Wir danken|Sie dankt|Er dankt] [heute|morgen|jetzt|auch] {der/die/den} Kollegin."],
+    [1, "[Ich zeige|Wir zeigen|Sie zeigt|Er zeigt] [heute|morgen|jetzt|gern] {den/die/der} Gästen das Zimmer."],
+    [1, "[Ich schicke|Wir schicken|Sie schickt|Er schickt] [heute|morgen|jetzt|auch] {einem/einen/ein} Kunden einen Brief."],
+    [2, "[Ich fahre|Wir fahren|Sie fährt|Er fährt] [heute|morgen|oft|auch] mit {dem/den/die} Bus."],
+    [2, "[Ich arbeite|Wir arbeiten|Sie arbeitet|Er arbeitet] [heute|morgen|jetzt|auch] bei {einer/eine/einen} Firma."]
+  ],
+  [
+    [0, "[Heute|Morgen|Am Samstag|Am Sonntag] {spielt er/er spielt/spielen er} [Fussball|Tennis|Klavier|Gitarre]."],
+    [0, "[Im Park|Zu Hause|Am Abend|Am Morgen] {lese ich/ich lese/lesen ich} [gern|oft|allein|lange]."],
+    [1, "[Heute|Morgen|Am Samstag|Am Sonntag] {will er/er will/wollen er} [singen|schwimmen|lesen|tanzen]."],
+    [1, "[Gestern|Am Samstag|Am Sonntag|Am Abend] haben wir [lange|zusammen|gern|auch] {gesungen/singen/gesingt}."],
+    [2, "Das {Kochen/kocht/koche} macht [mir|dir|ihm|ihr] [heute|oft|auch|besonders] Spass."],
+    [2, "[Heute|Morgen|Am Samstag|Am Sonntag] {male ich/ich male/malen ich} [allein|draussen|im Park|zu Hause] gern."]
+  ],
+  [
+    [0, "[Der Mantel|Die Jacke|Das Kleid|Das Hemd] ist [schon|noch|auch|ganz] {schwarz/schwarzer/schwarzen}."],
+    [0, "[Ich kaufe|Wir kaufen|Sie kauft|Er kauft] [heute|morgen|hier|auch] das {weisse/weiss/weisser} Hemd."],
+    [1, "[Heute|Morgen|Am Samstag|Am Sonntag] ist es [etwas|viel|deutlich|ein bisschen] {wärmer/warm/wärmsten} als gestern."],
+    [1, "[Heute|Morgen|Am Samstag|Am Sonntag] ist es [hier|dort|in Bern|in Basel] so kalt {wie/als/mehr} in Zürich."],
+    [2, "[Heute|Morgen|Am Samstag|Am Sonntag] {wird/werden/wirst} es [hier|dort|in Bern|in Basel] wärmer."],
+    [2, "[Hier|Dort|In Basel|In Bern] {regnet es/es regnet/regnen es} [heute|jetzt|noch|wieder]."]
+  ],
+  [
+    [0, "[Ich nehme|Wir nehmen|Sie nimmt|Er nimmt] [heute|jetzt|auch|gern] den {frischen/frische/frischer} Salat."],
+    [0, "[Ich bestelle|Wir bestellen|Sie bestellt|Er bestellt] [jetzt|heute|auch|gern] die {heisse/heisser/heissen} Suppe."],
+    [1, "[Ich bestelle|Wir bestellen|Sie bestellt|Er bestellt] [jetzt|heute|auch|gern] ein {kaltes/kalte/kalten} Getränk."],
+    [1, "[Ich esse|Wir essen|Sie isst|Er isst] [heute|jetzt|auch|gern] Suppe mit {frischem/frisches/frischen} Brot."],
+    [2, "[Ich hätte|Wir hätten|Sie hätte|Er hätte] gern [einen frischen|einen kleinen|einen grossen|einen kalten] {Salat/Salate/Salaten}."],
+    [2, "[Ich bestelle|Wir bestellen|Ich nehme|Wir nehmen] [heute|jetzt|auch|gern] {einen/ein/einem} Tee, bitte."]
+  ],
+  [
+    [0, "[Heute|Morgen|Jetzt|Am Samstag] {fahre ich/ich fahre/fahren ich} [in die Stadt|ins Kino|ins Museum|nach Hause]."],
+    [0, "[Ich gehe|Wir gehen|Sie geht|Er geht] {oft/häufige/häufigem} [ins Museum|ins Kino|zu Fuss|in die Stadt]."],
+    [1, "[Der Bus|Die Tram|Der Zug|Das Auto] ist [heute|hier|dort|jetzt] viel {schneller/schnell/schnellsten} als früher."],
+    [1, "[Der Park|Das Museum|Die Kreuzung|Der Bahnhof] ist [für mich|für dich|für uns|für sie] nah {genug/zu/sehr}."],
+    [2, "[Gehen Sie|Fahren Sie] [bitte|zuerst|dann|jetzt] nach {links/linke/linken}."],
+    [2, "[Gehen Sie|Fahren Sie] [bitte|zuerst|dann|jetzt] nach {rechts/rechte/rechten}."],
+    [2, "[Wo|Wie weit entfernt] {ist der/der ist/sind der} [Bahnhof|Park|Supermarkt|Markt]?"]
+  ],
+  [
+    [0, "[Wir warten|Ich warte|Sie wartet|Er wartet] [heute|jetzt|noch|wieder] {drinnen/hinein/hinaus}."],
+    [0, "[Der Stuhl|Der Tisch|Das Sofa|Die Lampe] steht [jetzt|noch|auch|wieder] {hier/hin/wohin}."],
+    [1, "Worauf {wartest du/du wartest/warten du} [heute|jetzt|noch|eigentlich] [hier|dort|zu Hause|in der Küche]?"],
+    [1, "Mit {wem/wen/wer} [sprichst du|sprecht ihr|spricht er|spricht sie] [heute|morgen|jetzt|hier]?"],
+    [2, "[Ich spreche|Wir sprechen|Sie spricht|Er spricht] [heute|morgen|jetzt|oft] mit {ihr/sie/ihren}."],
+    [2, "[Heute|Morgen|Jetzt|Hier] {sprechen wir/wir sprechen/spricht wir} [auch|wieder|noch|gern] darüber."]
+  ],
+  [
+    [0, "[Ich sehe|Wir sehen|Sie sieht|Er sieht] [heute|morgen|hier|dort] {niemanden/niemandem/niemandes}."],
+    [0, "[Heute|Morgen|Jetzt|Hier] {wartet jemand/jemand wartet/warten jemand} [auf dich|auf mich|auf uns|auf sie]."],
+    [1, "[Ich habe|Wir haben|Sie hat|Er hat] [heute|morgen|jetzt|hier] {keine/kein/keinen} Zeit."],
+    [1, "[Ich kaufe|Wir kaufen|Sie kauft|Er kauft] [heute|morgen|hier|dort] {keinen/kein/keinem} Mantel."],
+    [2, "{Warten Sie/Wartest Sie/Wartet Sie} bitte [hier|dort|am See|auf dem Weg] [bis sieben|bis acht|noch kurz|einen Moment]!"],
+    [2, "{Kommen Sie/Kommst Sie/Kommt Sie} bitte [heute|morgen|am Samstag|am Sonntag] [hierher|zu mir|zu uns|mit uns]!"]
+  ],
+  [
+    [0, "[Ich habe|Wir haben|Sie hat|Er hat] [heute|jetzt|noch|wieder] {Hunger/hungrig/hungrige}."],
+    [0, "[Ich habe|Wir haben|Sie hat|Er hat] [heute|morgen|jetzt|auch] {keine/kein/keinen} Zeit."],
+    [1, "[Heute|Morgen|Am Abend|Am Morgen] {bin ich/ich bin/bist ich} [bereit|zufrieden|müde|beschäftigt]."],
+    [1, "[Ich bin|Wir sind|Sie ist|Er ist] [heute|morgen|jetzt|auch] {müde/müderes/müden}."],
+    [2, "[Mia|Anna|Lena|Nina] trägt [heute|morgen|oft|auch] {eine/einen/ein} Brille."],
+    [2, "[Leo|Paul|David|Emil] hat [sehr|besonders|ganz|ziemlich] {kurze/kurz/kurzen} Haare."]
+  ]
+];
+
+const polyglotPracticeRewrites = [
+  [1, "Задай вопрос.", "Ihr lernt heute.", "Lernt ihr heute?"],
+  [1, "Скажи это про вчера.", "Wir hören Musik.", "Wir haben gestern Musik gehört."],
+  [1, "Начни с Heute.", "Wir essen heute in Bern.", "Heute essen wir in Bern."],
+  [1, "Соедини фразы словом aber.", "Er liest. Sie bleibt zu Hause.", "Er liest, aber sie bleibt zu Hause."],
+  [0, "Скажи, что покупаешь два яблока.", "Ich kaufe hier einen Apfel.", "Ich kaufe hier zwei Äpfel."],
+  [0, "Скажи это про себя и друга. Начни с Wir.", "Ich beeile mich heute.", "Wir beeilen uns heute."],
+  [0, "Скажи это про вчера.", "Wir kommen am Abend an.", "Wir sind gestern Abend angekommen."],
+  [1, "Скажи, что пальто тебе не нужно.", "Ich brauche einen Mantel.", "Ich brauche keinen Mantel."],
+  [0, "Скажи, что ты помогаешь ребёнку.", "Ich helfe der Kollegin.", "Ich helfe dem Kind."],
+  [0, "Начни с Im Park.", "Ich laufe im Park.", "Im Park laufe ich."],
+  [1, "Скажи, что сегодня теплее, чем вчера.", "Heute ist es in Bern warm.", "Heute ist es in Bern wärmer als gestern."],
+  [1, "Добавь, что суп горячий.", "Wir essen Brot mit einer Suppe.", "Wir essen Brot mit einer heissen Suppe."],
+  [0, "Начни с Jetzt.", "Wir fahren jetzt ins Museum.", "Jetzt fahren wir ins Museum."],
+  [2, "Замени о поездке на об этом.", "Sie spricht über die Reise.", "Sie spricht darüber."],
+  [2, "Обратись к нескольким друзьям.", "Warte hier!", "Wartet hier!"],
+  [1, "Скажи, что ты начинаешь уставать.", "Ich bin jetzt müde.", "Ich werde jetzt müde."]
+];
+
 const polyglotCourse = [
   {
     title: "Первые фразы", pages: "17–32",

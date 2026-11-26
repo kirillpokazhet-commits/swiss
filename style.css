@@ -434,22 +434,36 @@ input[type="file"] { max-width: 100%; padding: var(--space-2); }
   ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
 }
 
-#polyglot-view { width: min(100%, 42rem); margin: var(--section-gap) auto 0; }
+#polyglot-view { --progress-fill: #2b794f; width: min(100%, 42rem); margin: var(--section-gap) auto 0; }
 #hero .polyglot-practice-title { font-size: clamp(1.45rem, 4vw, 2.2rem); text-wrap: pretty; }
 #polyglot-view > * + * { margin-block-start: var(--space-6); }
 #polyglot-view h2 { font-size: clamp(1.18rem, 3vw, 1.48rem); line-height: 1.3; }
-.polyglot-start, .polyglot-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
+.polyglot-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
 .tabs.polyglot-tabs { margin: 0; padding: 0; background: transparent; border-bottom: 1px solid var(--line); border-radius: 0; }
 .polyglot-tabs a { border-bottom: 2px solid transparent; border-radius: 0; }
 .polyglot-tabs a:hover { background: var(--soft); }
 .polyglot-tabs a[aria-current] { background: transparent; border-bottom-color: var(--ink); color: var(--ink); }
 #polyglot-view .polyglot-tabs + .polyglot-body { margin-block-start: clamp(var(--space-6), 4vw, var(--space-8)); }
-.polyglot-lesson-list, .polyglot-final { display: grid; gap: var(--space-2); padding: 0; margin: var(--space-3) 0 0; list-style: none; }
-.polyglot-lesson { display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); min-height: 56px; border-radius: 8px; padding: var(--space-3); background: var(--soft); }
-a.polyglot-lesson:hover { background: #ededee; }
-.polyglot-lesson.is-locked { background: var(--paper); border: 1px solid var(--line); color: var(--muted); }
-.polyglot-lesson-lock { display: grid; place-items: center; }
-.polyglot-lesson-number { font-variant-numeric: tabular-nums; color: var(--muted); }
+#hero .polyglot-course-summary { font-size: .875rem; }
+.polyglot-lesson-group > h2 { font-size: 1.05rem; line-height: 1.35; }
+.polyglot-lesson-list, .polyglot-final { display: grid; padding: 0; margin: var(--space-3) 0 0; list-style: none; }
+.polyglot-final { gap: var(--space-2); }
+.polyglot-lesson-list > li + li { border-block-start: 1px solid var(--line); }
+.polyglot-lesson-list > .polyglot-current-row,
+.polyglot-lesson-list > .polyglot-current-row + li { border-block-start: 0; }
+.polyglot-lesson { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) 18px; align-items: center; gap: var(--space-3); min-height: 48px; padding: var(--space-2) var(--space-4); }
+a.polyglot-lesson:hover { background: var(--soft); }
+.polyglot-lesson.is-locked { color: var(--muted); }
+a.polyglot-lesson .polyglot-lesson-name { font-weight: 600; }
+.polyglot-lesson-lock, .polyglot-lesson-check { display: grid; place-items: center; }
+.polyglot-lesson-check { color: var(--progress-fill); }
+.polyglot-lesson-number { font-size: .875rem; font-variant-numeric: tabular-nums; color: var(--muted); }
+.polyglot-lesson.is-current { grid-template-columns: 1.5rem minmax(0, 1fr); align-items: baseline; padding-block: var(--space-4); border-radius: var(--card-radius); background: var(--soft); }
+.polyglot-current-content { display: grid; gap: var(--space-3); }
+.polyglot-current-content h3 { font-size: 1.15rem; line-height: 1.3; }
+.polyglot-current-progress { display: grid; gap: var(--space-2); max-width: 24rem; }
+.polyglot-current-progress small { line-height: 1.35; }
+.polyglot-current-progress .polyglot-progress { height: .375rem; }
 .polyglot-card > * + *, .polyglot-card [data-card-answer] ~ *, .polyglot-rule > * + *, .polyglot-final details { margin-block-start: var(--space-3); }
 .polyglot-card > div:empty { display: none; }
 .polyglot-body > * + * { margin-block-start: var(--space-4); }
@@ -463,7 +477,7 @@ a.polyglot-lesson:hover { background: #ededee; }
 .polyglot-theory-table thead { background: var(--soft); }
 .polyglot-theory-table tbody tr { border-block-start: 1px solid var(--line); }
 .polyglot-theory-table th:first-child { min-width: 5rem; }
-.polyglot-progress { --progress-fill: #2b794f; display: block; width: 100%; height: .5rem; appearance: none; border: 0; border-radius: 8px; background: var(--line); accent-color: var(--progress-fill); }
+.polyglot-progress { display: block; width: 100%; height: .5rem; appearance: none; border: 0; border-radius: 8px; background: var(--line); accent-color: var(--progress-fill); }
 .polyglot-progress::-webkit-progress-bar { background: var(--line); border-radius: 8px; }
 .polyglot-progress::-webkit-progress-value { background: var(--progress-fill); border-radius: 8px; }
 .polyglot-progress::-moz-progress-bar { background: var(--progress-fill); border-radius: 8px; }
@@ -500,6 +514,7 @@ a.polyglot-lesson:hover { background: #ededee; }
 .polyglot-question button[type="submit"]:disabled { color: var(--muted); background: var(--line); border-color: var(--line); cursor: default; }
 .polyglot-question .word-bank, .polyglot-question .word-tray { margin: 0; }
 .polyglot-question .word-tray button { background: var(--paper); }
+.polyglot-find button[aria-pressed="true"] { border-color: var(--ink); background: var(--soft); }
 .polyglot-detail { border-radius: 8px; padding: var(--space-3); background: var(--soft); font-size: 1.1rem; }
 .polyglot-feedback { display: grid; gap: var(--space-1); padding: var(--space-3); border-radius: 8px; }
 .polyglot-incorrect { background: #fbf2f3; }
