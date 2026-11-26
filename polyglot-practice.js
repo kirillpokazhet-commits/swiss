@@ -18,7 +18,7 @@ const polyglotPractice = (() => {
   }
 
   function parseVerb(row) {
-    const [key, translation, forms, auxiliary, participle, context] = row.split("|");
+    const [key, translation, forms, auxiliary, participle, context, revision] = row.split("|");
     const reflexive = key.startsWith("sich ");
     const [first, second] = key.replace(/^sich /, "").split("/");
     const prefix = second ? first : "";
@@ -28,7 +28,7 @@ const polyglotPractice = (() => {
     const [firstPerson, secondPerson, thirdPerson, pluralSecond] = forms.split(",");
     return {
       term: (reflexive ? "sich " : "") + infinitive,
-      translation, reflexive, prefix, auxiliary, participle, context,
+      translation, reflexive, prefix, auxiliary, participle, context, revision,
       forms: [firstPerson, secondPerson, thirdPerson, base, pluralSecond, base]
     };
   }
@@ -60,6 +60,11 @@ const polyglotPractice = (() => {
         ...choice("rule-" + key, "rule", label, prompt, answer, alternatives, template.replace(match[0], "…")),
         fullAnswer, ruleIndex
       };
+      const choosePhrase = {
+        ...choice("choose-phrase-" + key, "rule", label, prompt, fullAnswer,
+          alternatives.map(option => template.replace(match[0], option))),
+        instruction: "Выбери подходящую фразу", ruleIndex
+      };
       const arrange = {
         ...build("phrase-" + key, "phrase", label, prompt, fullAnswer,
           /начни с/iu.test(prompt) ? "" : courseText("Начало: #1", fullAnswer.split(/\s+/u)[0])),
@@ -67,18 +72,21 @@ const polyglotPractice = (() => {
         distractors: alternatives.filter(option => !option.includes(" ")),
         ruleIndex
       };
-      return [pick, arrange, { ...arrange, id: "write-" + key, kind: "write", type: "type", instruction: undefined, variants }];
+      return [pick, arrange, choosePhrase,
+        { ...arrange, id: "write-" + key, kind: "write", type: "type", instruction: undefined, variants }];
     });
 
-    for (const [index, verb] of verbs.entries()) {
+    for (const [index, verb] of (lesson.verbPractice ? verbs : []).entries()) {
+      if (Array.isArray(lesson.verbPractice) && !lesson.verbPractice.includes(verb.term)) continue;
       const forms = [...new Set(verb.forms)];
-      const otherParticiples = verbs.filter((_, position) => position !== index).map(item => item.participle);
+      const otherParticiples = verbs.filter((item, position) => position !== index &&
+        (!Array.isArray(lesson.verbPractice) || lesson.verbPractice.includes(item.term))).map(item => item.participle);
       for (const [position, [subject, reflexive, have, be]] of people.entries()) {
         const name = capital(subject);
         const middle = (verb.reflexive ? reflexive + " " : "") + verb.context;
         const verbForm = verb.forms[position];
         const presentTail = [middle, verb.prefix].filter(Boolean).join(" ");
-        const id = "verb-" + index + "-" + position + "-";
+        const id = "verb-" + index + "-" + position + (verb.revision ? "-" + verb.revision : "") + "-";
         const verbPrompt = verb.term + " — " + courseText(verb.translation);
         const questionPrompt = verbPrompt + ". " + (subject === "sie"
           ? courseText("Используй «sie» (они).") : courseText("Используй «#1».", subject));
@@ -141,8 +149,20 @@ const polyglotPractice = (() => {
 
   function masteryPercent(bank, mastery) {
     if (!mastery) return 0;
-    const earned = [...bank.skills.keys()].reduce((total, skill) => total + (mastery.earned[skill]?.length ?? 0), 0);
-    return Math.floor(100 * earned / (bank.skills.size * confirmations));
+    return percentageForSkills([...bank.skills.keys()], mastery);
+  }
+
+  function percentageForSkills(skills, mastery) {
+    const earned = skills.reduce((total, skill) => total + (mastery.earned[skill]?.length ?? 0), 0);
+    return Math.floor(100 * earned / (skills.length * confirmations));
+  }
+
+  function passedPreviousBank(lesson, mastery) {
+    if (!mastery || lesson.verbPractice) return false;
+    // Older banks added the same conjugation skills to every lesson.
+    const skills = [...lesson.rules.map((_, index) => "rule-" + index), "words", "present", "build"];
+    if (lesson.pastPractice) skills.push("aux", "part", "perfect");
+    return percentageForSkills(skills, mastery) >= passPercent;
   }
 
   function recordAttempt(mastery, question, correct) {
@@ -198,5 +218,5 @@ const polyglotPractice = (() => {
     return mastery;
   }
 
-  return { passPercent, makeBank, shuffleItems, newMastery, masteryPercent, recordAttempt, nextQuestion, migrateRound };
+  return { passPercent, makeBank, shuffleItems, newMastery, masteryPercent, passedPreviousBank, recordAttempt, nextQuestion, migrateRound };
 })();

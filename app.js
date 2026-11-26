@@ -11,6 +11,10 @@ const ratings = { again: "Снова", hard: "Трудно", good: "Хорошо
 const storageKey = "deutsch-a11.v2";
 const cardKeys = new Map();
 const mainDeck = buildMainDeck();
+const reviewDeck = mainDeck.flatMap(card => [
+  { ...card, key: `${card.key}:de`, reverse: false },
+  { ...card, key: `${card.key}:translation`, reverse: true }
+]);
 const glosses = buildGlosses();
 let saved = { theory: {}, cards: {}, practice: {}, bestTest: null, scenes: {} };
 let view;
@@ -59,7 +63,7 @@ function isRecord(value) {
 
 function parseBackup(contents) {
   const backup = JSON.parse(contents);
-  if (backup?.format !== backupFormat || backup.version !== 1 || backup.course !== storageKey) {
+  if (backup?.format !== backupFormat || ![1, 2].includes(backup.version) || backup.course !== storageKey) {
     throw new Error("Несовместимый файл");
   }
   const progress = backup.progress;
@@ -73,15 +77,11 @@ function parseBackup(contents) {
     Object.entries(progress.practice).some(([id, score]) => !isScore(score, lessons.get(id)?.practice.length)) ||
     (progress.bestTest !== null && !isScore(progress.bestTest, finalTest.length))
   ) throw new Error("Неверные результаты");
-  const cards = {};
   for (const [key, card] of Object.entries(progress.cards)) {
-    if (!cardKeys.has(key) || !isRecord(card) ||
-      !Number.isSafeInteger(card.due) || card.due < 0 || typeof card.learned !== "boolean" ||
-      !(Number.isSafeInteger(card.interval) && card.interval > 0 || isScore(card.level, 5))
-    ) throw new Error("Неверное расписание");
-    cards[key] = { due: card.due, learned: card.learned };
-    if (Number.isSafeInteger(card.interval) && card.interval > 0) cards[key].interval = card.interval;
-    else cards[key].level = card.level;
+    if (!(cardKeys.has(key) && isLegacyWordSchedule(card) ||
+      backup.version === 2 && canonicalReviewKey(key) && wordSchedule.isSchedule(card))) {
+      throw new Error("Неверное расписание");
+    }
   }
   const scenes = progress.scenes ?? {};
   if (!isRecord(scenes) || Object.entries(scenes).some(([id, done]) =>
@@ -92,7 +92,7 @@ function parseBackup(contents) {
       Object.entries(guided).some(([id, steps]) => !validStageProgress(steps, lessonRoutes[id]))) {
     throw new Error("Неверный прогресс занятия");
   }
-  return { theory: progress.theory, practice: progress.practice, cards: mergeCardSchedules(cards), bestTest: progress.bestTest, scenes,
+  return { theory: progress.theory, practice: progress.practice, cards: mergeCardSchedules(progress.cards), bestTest: progress.bestTest, scenes,
     guided: { ...guided, 7: guided[7] ?? progress.school ?? {} },
     resume: resumeStage(progress.resume) ? progress.resume : null };
 }
@@ -107,7 +107,7 @@ function validStageProgress(steps, route) {
 
 document.getElementById("export-progress").addEventListener("click", () => {
   const exportedAt = new Date().toISOString();
-  const copy = { format: backupFormat, version: 1, course: storageKey, exportedAt, progress: saved };
+  const copy = { format: backupFormat, version: 2, course: storageKey, exportedAt, progress: saved };
   const url = URL.createObjectURL(new Blob([JSON.stringify(copy, null, 2)], { type: "application/json" }));
   const link = document.createElement("a");
   link.href = url;
@@ -290,17 +290,37 @@ function buildMainDeck() {
   return [...byWord.values()];
 }
 
+function canonicalReviewKey(source) {
+  const match = /:(de|translation)$/u.exec(source);
+  const base = match && cardKeys.get(source.slice(0, match.index));
+  return base ? base + match[0] : null;
+}
+
+function isLegacyWordSchedule(card) {
+  return Number.isSafeInteger(card?.due) && card.due >= 0 && typeof card.learned === "boolean" &&
+    (Number.isSafeInteger(card.interval) && card.interval > 0 ||
+      Number.isInteger(card.level) && card.level >= 0 && card.level <= 5);
+}
+
 function mergeCardSchedules(cards) {
-  const merged = {};
-  const lastReview = card => card.due - (card.interval ?? ([0, 1, 3, 7, 14, 30][card.level] || 0) * day);
-  for (const [source, card] of Object.entries(cards)) {
-    const key = cardKeys.get(source);
-    if (!key) continue;
-    const previous = merged[key];
-    const latest = !previous || lastReview(card) > lastReview(previous) ? card : previous;
-    merged[key] = { ...latest, learned: Boolean(card.learned || previous?.learned) };
+  const legacy = {};
+  const directional = {};
+  for (const [source, card] of Object.entries(cards ?? {})) {
+    const base = cardKeys.get(source);
+    if (base && isLegacyWordSchedule(card)) {
+      const migrated = wordSchedule.migrate(card);
+      if (!legacy[base] || migrated.lastReview > legacy[base].lastReview) legacy[base] = migrated;
+    }
+    const key = canonicalReviewKey(source);
+    if (key && wordSchedule.isSchedule(card) && (!directional[key] || card.lastReview > directional[key].lastReview)) {
+      const { due, lastReview, stability, difficulty, phase, step } = card;
+      directional[key] = { due, lastReview, stability, difficulty, phase, step };
+    }
   }
-  return merged;
+  const migrated = Object.fromEntries(Object.entries(legacy).flatMap(([key, schedule]) => [
+    [`${key}:de`, schedule], [`${key}:translation`, { ...schedule }]
+  ]));
+  return { ...migrated, ...directional };
 }
 
 function lessonProgress(lesson) {
@@ -322,7 +342,7 @@ function renderNavigation() {
   const progress = course.map(lessonProgress);
   const count = progress.reduce((sum, item) => sum + item.done, 0);
   const max = progress.reduce((sum, item) => sum + item.total, 0);
-  const due = mainDeck.filter(card => saved.cards[card.key]?.due <= Date.now()).length;
+  const due = reviewDeck.filter(card => saved.cards[card.key]?.due <= Date.now()).length;
   elements.percent.textContent = new Intl.NumberFormat(courseLanguage, { style: "percent", maximumFractionDigits: 1 }).format(count / max);
   elements["due-count"].textContent = due ? `К повторению: ${due}` : "Колода всех лекций";
   const resumed = resumeStage(saved.resume);
@@ -729,28 +749,16 @@ function avoidRepeatedFirst(cards) {
 
 function openWords() {
   clearTimeout(reviewTimer);
-  const cards = mainDeck;
+  const cards = reviewDeck;
   const now = Date.now();
   const due = shuffle(cards.filter(card => saved.cards[card.key]?.due <= now));
   const fresh = shuffle(cards.filter(card => !saved.cards[card.key]));
   avoidRepeatedFirst(due.length ? due : fresh);
   study = {
     cards, queue: [...due, ...fresh.slice(0, 12)],
-    reviewed: 0, flipped: false, reverse: Math.random() < 0.5
+    reviewed: 0, flipped: false
   };
   renderWords();
-}
-
-function reviewDelays(card) {
-  const previous = saved.cards[card.key];
-  const days = (previous?.interval ?? ([0, 1, 3, 7, 14, 30][previous?.level] || 0) * day) / day;
-  if (days < 1) return { again: minute, hard: 10 * minute, good: day, easy: 4 * day };
-  return {
-    again: minute,
-    hard: Math.ceil(days * 1.2) * day,
-    good: Math.max(Math.ceil(days * 1.2) + 1, Math.round(days * 2)) * day,
-    easy: Math.max(Math.ceil(days * 1.2) + 2, Math.round(days * 3)) * day
-  };
 }
 
 const relativeTime = new Intl.RelativeTimeFormat(courseLanguage, { style: "short" });
@@ -769,22 +777,22 @@ function renderWords() {
   if (!card && Number.isFinite(nextDue)) {
     reviewTimer = setTimeout(() => openWords(), Math.min(Math.max(nextDue - now, 0), 2_147_483_647));
   }
-  const delays = card && reviewDelays(card);
-  const list = study.cards.map(item => `
+  const planned = card && wordSchedule.preview(saved.cards[card.key], now);
+  const list = mainDeck.map(item => `
     <dt><span lang="de-CH">${escapeHTML(item.word)}</span>${audioButton()}</dt><dd>${escapeHTML(item.translation)}</dd>`).join("");
   const example = card && cardExample(card.front, card.lessonId);
   const panel = card ? `
     <div class="panel card-study">
       <div class="spread card-toolbar"><small>В очереди ${study.queue.length}</small>
-        <div id="card-audio"${study.reverse ? " hidden" : ""}><span hidden id="card-audio-text" lang="de-CH">${escapeHTML(card.front)}</span>${audioButton()}</div></div>
+        <div id="card-audio"${card.reverse ? " hidden" : ""}><span hidden id="card-audio-text" lang="de-CH">${escapeHTML(card.front)}</span>${audioButton()}</div></div>
       <button class="flashcard" type="button" data-action="reveal" aria-expanded="false" aria-controls="card-back">
         <span class="card-rotator">
           <span class="card-face card-front">
-            <strong lang="${study.reverse ? courseLanguage : "de-CH"}">${escapeHTML(study.reverse ? card.translation : card.front)}</strong><small>Нажми, чтобы перевернуть</small>
+            <strong lang="${card.reverse ? courseLanguage : "de-CH"}">${escapeHTML(card.reverse ? card.translation : card.front)}</strong><small>Нажми, чтобы перевернуть</small>
           </span>
           <span class="card-face card-back" id="card-back" aria-hidden="true">
-            <small lang="${study.reverse ? courseLanguage : "de-CH"}">${escapeHTML(study.reverse ? card.translation : card.front)}</small>
-            <strong class="translation" lang="${study.reverse ? "de-CH" : courseLanguage}">${escapeHTML(study.reverse ? card.front : card.translation)}</strong>
+            <small lang="${card.reverse ? courseLanguage : "de-CH"}">${escapeHTML(card.reverse ? card.translation : card.front)}</small>
+            <strong class="translation" lang="${card.reverse ? "de-CH" : courseLanguage}">${escapeHTML(card.reverse ? card.front : card.translation)}</strong>
             ${example ? `<span class="card-example" lang="de-CH">${escapeHTML(example)}</span>` : ""}
             ${card.plural ? `<small lang="de-CH">${escapeHTML(card.plural)}</small>` : ""}
           </span>
@@ -793,7 +801,7 @@ function renderWords() {
       <div class="actions card-actions" hidden>
         <div class="ratings" role="group" aria-label="Оценка карточки">${Object.entries(ratings).map(([rating, label]) => `
           <button data-action="rate-card" data-rating="${rating}">
-            <strong>${label}</strong><small>${formatReviewDelay(delays[rating])}</small>
+            <strong>${label}</strong><small>${formatReviewDelay(planned[rating].due - now)}</small>
           </button>`).join("")}</div></div>
     </div>` : `
     <div class="panel" tabindex="-1" data-words-status><h3>${newCount ? "Подход завершён" : "Сейчас очередь пуста"}</h3>
@@ -801,7 +809,7 @@ function renderWords() {
     ${newCount ? `<p>Новых карточек осталось: ${newCount}.</p>` : ""}
     ${Number.isFinite(nextDue) ? `<p>По расписанию: ${nextDue <= now ? "есть карточки к повторению" : formatReviewDelay(nextDue - now)}.</p>` : ""}
     ${newCount ? '<div class="actions"><button class="primary" data-action="scheduled-words">Следующая порция</button></div>' : ""}</div>`;
-  const description = `Интервальное повторение · ${study.cards.length} слов и выражений`;
+  const description = `Интервальное повторение · ${mainDeck.length} слов и выражений`;
   const dictionary = `<details class="panel"><summary>Список слов</summary><dl>${list}</dl></details>`;
   elements.content.innerHTML = `<p class="words-intro muted">${description}</p>${panel}${dictionary}`;
 }
@@ -813,7 +821,7 @@ function showCardSide(button) {
   button.querySelector(".card-front").setAttribute("aria-hidden", String(study.flipped));
   button.querySelector(".card-back").setAttribute("aria-hidden", String(!study.flipped));
   const card = study.queue[0];
-  document.getElementById("card-audio").hidden = study.reverse && !study.flipped;
+  document.getElementById("card-audio").hidden = card.reverse && !study.flipped;
   document.getElementById("card-audio-text").textContent = (study.flipped && cardExample(card.front, card.lessonId)) || card.front;
 }
 
@@ -854,17 +862,15 @@ async function flipCard(button) {
 }
 
 function gradeCard(rating) {
+  if (!study?.queue?.length || !Object.hasOwn(ratings, rating)) return;
   const card = study.queue.shift();
-  const interval = reviewDelays(card)[rating];
-  saved.cards[card.key] = {
-    interval, due: Date.now() + interval, learned: rating !== "again" || Boolean(saved.cards[card.key]?.learned)
-  };
+  const now = Date.now();
+  saved.cards[card.key] = wordSchedule.preview(saved.cards[card.key], now)[rating];
   study.reviewed++;
   const pending = new Set(study.queue.map(item => item.key));
-  const ready = study.cards.filter(item => !pending.has(item.key) && saved.cards[item.key]?.due <= Date.now());
+  const ready = study.cards.filter(item => !pending.has(item.key) && saved.cards[item.key]?.due <= now);
   study.queue.push(...shuffle(ready));
   study.flipped = false;
-  study.reverse = !study.reverse;
   persist();
   renderWords();
 }

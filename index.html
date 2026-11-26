@@ -6,23 +6,58 @@
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <link rel="icon" type="image/png" href="./apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="Swiss Deutsch">
+<style>
+  .site-preloader:not([hidden]) {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    background: #c52431;
+    color: #fff;
+    font: 700 clamp(1.65rem, 5vw, 2.5rem)/1.1 Inter, system-ui, sans-serif;
+  }
+  .preloader-brand { display: grid; justify-items: center; gap: 24px; }
+  .preloader-cross {
+    width: 68px;
+    height: 68px;
+    background: linear-gradient(#fff, #fff) center / 68px 20px no-repeat,
+                linear-gradient(#fff, #fff) center / 20px 68px no-repeat;
+  }
+</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="./style.css?v=swiss-deutsch">
+<link rel="stylesheet" href="./style.css?v=practice-focus">
 <script defer src="./ukrainian.js?v=three-sections"></script>
-<script defer src="./ukrainian-courses.js?v=1"></script>
+<script defer src="./ukrainian-courses.js?v=lesson-layout"></script>
 <script defer src="./language.js?v=uk-courses"></script>
 <script defer src="./course.js?v=three-sections"></script>
-<script defer src="./polyglot-course.js?v=7"></script>
-<script defer src="./polyglot-theory.js?v=4"></script>
-<script defer src="./polyglot-practice.js?v=uk"></script>
-<script defer src="./polyglot.js?v=swiss-deutsch"></script>
+<script defer src="./polyglot-course.js?v=topic-practice"></script>
+<script defer src="./polyglot-theory.js?v=book-reference"></script>
+<script defer src="./polyglot-reference.js?v=2"></script>
+<script defer src="./polyglot-practice.js?v=topic-practice"></script>
+<script defer src="./polyglot.js?v=practice-focus"></script>
 <script defer src="./grammar-course.js?v=2-journeys"></script>
 <script defer src="./grammar-materials.js?v=2"></script>
 <script defer src="./grammar.js?v=three-sections"></script>
-<script defer src="./app.js?v=swiss-deutsch"></script>
+<script defer src="./word-schedule.js?v=1"></script>
+<script defer src="./app.js?v=fsrs"></script>
 <body>
+  <div class="site-preloader" id="site-preloader" aria-hidden="true" hidden>
+    <div class="preloader-brand"><span class="preloader-cross"></span>Swiss Deutsch</div>
+  </div>
+  <script>
+    {
+      const preloader = document.getElementById("site-preloader");
+      const minimumDuration = 2000;
+      const started = performance.now();
+      preloader.hidden = false;
+      document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => { preloader.hidden = true; }, Math.max(0, minimumDuration - (performance.now() - started)));
+      }, { once: true });
+    }
+  </script>
   <main class="layout">
     <div class="masthead">
       <a class="wordmark" href="#home"><span class="swiss-cross" aria-hidden="true"></span> Swiss Deutsch</a>
@@ -32,22 +67,18 @@
       </nav>
     </div>
     <header id="hero"></header>
-    <nav class="hub-list" id="course-sections" aria-label="Разделы сайта" hidden>
-      <a class="destination destination-main destination-with-icon" href="#polyglot">
-        <span class="mode-icon mode-icon-learn" aria-hidden="true"></span>
-        <span><strong>Немецкий шаг за шагом</strong><small>16 уроков с теорией и практикой</small></span>
-        <span class="menu-arrow" aria-hidden="true"></span>
-      </a>
-      <a class="destination destination-with-icon" href="#grammar-course">
-        <span class="mode-icon mode-icon-grammar" aria-hidden="true"></span>
-        <span><strong>Грамматика с нуля</strong><small>50 тем в любом порядке, поиск и практика</small></span>
-        <span class="menu-arrow" aria-hidden="true"></span>
-      </a>
-      <a class="destination destination-with-icon" href="#words">
-        <span class="mode-icon mode-icon-words" aria-hidden="true"></span>
-        <span><strong>Учить слова</strong><small>Карточки Schritte A1.1 с интервальным повторением</small></span>
-        <span class="menu-arrow" aria-hidden="true"></span>
-      </a>
+    <nav id="course-sections" aria-label="Разделы сайта" hidden>
+      <div class="home-primary">
+        <a class="destination" href="#polyglot">
+          <span><strong>Немецкий шаг за шагом</strong><small>16 уроков с теорией и практикой</small></span>
+          <span class="menu-arrow" aria-hidden="true"></span>
+        </a>
+        <a class="destination" href="#words">
+          <span><strong>Учить слова</strong><small>Карточки Schritte A1.1 с интервальным повторением</small></span>
+          <span class="menu-arrow" aria-hidden="true"></span>
+        </a>
+      </div>
+      <a class="home-grammar-link" href="#grammar-course">Грамматика с нуля</a>
     </nav>
     <div id="overview" hidden>
       <section class="home-modes" aria-label="Режимы занятий">

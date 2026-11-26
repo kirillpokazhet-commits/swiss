@@ -1,6 +1,7 @@
 const polyglotCourse = [
   {
     title: "Первые фразы", pages: "17–32",
+    verbPractice: true,
     goal: "Поздоровайся, расскажи о себе и задай первый вопрос по-немецки.",
     rules: [
       ["Кто что делает","Сначала посмотри, о ком речь. Скажи вместе: ich lerne, du lernst, er lernt."],
@@ -15,10 +16,10 @@ const polyglotCourse = [
       ["Auf Wiedersehen!", "До свидания!", "Danke und auf Wiedersehen!"]
     ],
     verbs: [
-      "fragen|спрашивать|frage,fragst,fragt,fragt|haben|gefragt|im Kurs",
-      "antworten|отвечать|antworte,antwortest,antwortet,antwortet|haben|geantwortet|auf die Frage",
+      "fragen|спрашивать|frage,fragst,fragt,fragt|haben|gefragt|heute|intro",
+      "antworten|отвечать|antworte,antwortest,antwortet,antwortet|haben|geantwortet|jetzt|intro",
       "sagen|говорить, сказать|sage,sagst,sagt,sagt|haben|gesagt|das",
-      "machen|делать|mache,machst,macht,macht|haben|gemacht|die Aufgabe",
+      "machen|делать|mache,machst,macht,macht|haben|gemacht|das|intro",
       "wohnen|жить, проживать|wohne,wohnst,wohnt,wohnt|haben|gewohnt|in Bern",
       "arbeiten|работать|arbeite,arbeitest,arbeitet,arbeitet|haben|gearbeitet|heute zu Hause",
       "lernen|учиться, учить|lerne,lernst,lernt,lernt|haben|gelernt|Deutsch",
@@ -28,16 +29,16 @@ const polyglotCourse = [
       [0,"Я живу в Берне.","Ich {wohne/wohnst/wohnen} in Bern."], [0,"Вы работаете дома. (К нескольким друзьям.)","Ihr {arbeitet/arbeiten/arbeitest} zu Hause."],
       [0,"Она учит немецкий.","Sie {lernt/lerne/lernen} Deutsch."], [0,"Мы слышим музыку.","Wir {hören/hört/hörst} Musik."],
       [1,"Ты это делаешь?","{Machst/Mache/Macht} du das?"], [1,"Вы спрашиваете? (Вежливо, на «вы».)","{Fragen/Fragst/Fragt} Sie?"],
-      [1,"Он сегодня не работает.","Er {arbeitet/arbeite/arbeiten} heute nicht."], [1,"Завтра я учу немецкий. Начни с Morgen.","Morgen {lerne/lernt/lernen} ich Deutsch."],
-      [2,"Мы сейчас не отвечаем.","Wir antworten jetzt {nicht/kein/keine}.","present"], [2,"Ты этого не говоришь.","Du sagst das {nicht/kein/keine}.","present"],
+      [2,"Он сегодня не работает.","Er {arbeitet/arbeite/arbeiten} heute nicht.","intro"], [1,"Завтра я учу немецкий. Начни с Morgen.","Morgen {lerne/lernt/lernen} ich Deutsch."],
+      [2,"Мы сейчас не отвечаем.","Wir {antworten jetzt nicht/antworten jetzt/jetzt nicht antworten}.","intro"], [2,"Ты этого не говоришь.","Du {sagst das nicht/sagst das/das nicht sagst}.","intro"],
       [2,"Я этого не делаю.","Ich {mache/machst/macht} das nicht.","present"], [2,"Она сегодня не работает.","Sie {arbeitet/arbeitest/arbeiten} heute nicht.","present"],
       [3,"Как тебя зовут?","Wie {heisst/heissen/heisse} du?"], [3,"Как вас зовут? (Вежливо.)","Wie {heissen/heisst/heisse} Sie?"],
-      [3,"Меня зовут Лена.","Ich {heisse/heisst/heissen} Lena."], [3,"Добрый день, госпожа Келлер!","Guten {Tag/Tage/Tagen}, Frau Keller!"],
-      [0,"Она отвечает на вопрос.","Sie {antwortet/antwort/antworten} auf die Frage."],
+      [3,"Меня зовут Лена.","Ich {heisse/heisst/heissen} Lena."], [3,"Добрый день, госпожа Келлер!","Guten {Tag/Morgen/Abend}, Frau Keller!","intro"],
+      [0,"Она сейчас отвечает.","Sie {antwortet/antwortest/antworten} jetzt.","intro"],
       [0,"Ты работаешь завтра.","Du {arbeitest/arbeitet/arbeitst} morgen."],
-      [1,"Мы этого не делаем.","Wir machen das {nicht/kein/keine}.","present"],
+      [2,"Мы этого не делаем.","Wir {machen das nicht/machen das/das machen nicht}.","intro"],
       [1,"Ты учишь немецкий?","{Lernst/Lernt/Lernen} du Deutsch?"],
-      [2,"Сегодня мы не учимся.","Wir lernen heute {nicht/kein/keine}.","present"],
+      [2,"Сегодня мы не учимся.","Wir {lernen heute nicht/lernen heute/heute nicht lernen}.","intro"],
       [2,"Вы сегодня не спрашиваете. (Вежливо.)","Sie {fragen/fragst/fragt} heute nicht.","present"],
       [3,"Пока, до завтра!","{Tschüss/Danke/Hallo}, bis morgen!"],
       [3,"Очень приятно, господин Вебер.","Sehr {angenehm/bitte/guten}, Herr Weber."]
@@ -45,12 +46,13 @@ const polyglotCourse = [
   },
   {
     title: "Работа и то, что уже случилось", pages: "20, 33–50",
+    verbPractice: ["nehmen", "helfen", "sehen", "kommen", "fahren"],
     goal: "Расскажи, кем ты работаешь, что делал вчера и куда ездил.",
     pastPractice: true,
     rules: [
       ["Откуда nimmst","Скажи парой: ich nehme, du nimmst. С wir снова будет nehmen."],
       ["Как сказать о прошлом","С действием вроде sehen обычно habe: ich habe gesehen. С приходом или поездкой часто bin: ich bin gekommen."],
-      ["Кем и где работаешь","Кем? Als Lehrer. У кого? Bei einer Firma."]
+      ["Кем и где работаешь","Кем? Als Lehrer. Где? Im Büro. У кого? Bei einer Firma."]
     ],
     words: [
       ["der Beruf", "профессия", "Was sind Sie von Beruf?"], ["die Firma", "фирма", "Ich arbeite bei einer Firma."],
@@ -74,7 +76,8 @@ const polyglotCourse = [
       [1,"Мы видели фильм.","Wir {haben/sind/hat} den Film gesehen."], [1,"Ты приехал поездом?","{Bist/Hast/Seid} du mit dem Zug gekommen?"],
       [1,"Вы нам помогли. (К нескольким друзьям.)","Ihr {habt/seid/hast} uns geholfen."],
       [2,"Я работаю учителем.","Ich arbeite {als/bei/nach} Lehrer."], [2,"Он работает в этой фирме.","Er arbeitet {bei/als/aus} dieser Firma."],
-      [2,"Ты знаешь эту женщину?","{Kennst/Weisst/Kennt} du diese Frau?"], [2,"Я знаю, где вокзал.","Ich {weiss/kenne/wisst}, wo der Bahnhof ist."],
+      [2,"Я работаю инженером.","Ich arbeite {als/bei/aus} Ingenieur.","topic"],
+      [2,"Я работаю в офисе.","Ich arbeite {im/ins/aus dem} Büro.","topic"],
       [2,"Где вы работаете?","{Wo/Wer/Wann} arbeiten Sie?"],
       [0,"Ты берёшь ключ?","{Nimmst/Nehmen/Nehmt} du den Schlüssel?"],
       [0,"Она видит детей издалека.","Sie {sieht/seht/sehen} die Kinder von Weitem."],
@@ -86,7 +89,7 @@ const polyglotCourse = [
       [1,"Ты это сказал?","{Hast/Hat/Haben} du das gesagt?"],
       [1,"Я этого не делал.","Ich habe das nicht {gemacht/mache/machen}."],
       [1,"Она работала вчера.","Sie hat gestern {gearbeitet/gearbeiten/arbeitet}."],
-      [1,"Мы не слушали музыку.","Wir haben keine Musik {gehört/hören/gehören}."],
+      [1,"Мы слушали музыку.","Wir haben Musik {gehört/hören/gehören}.","topic"],
       [1,"Вы задали вопрос? (Вежливо.)","{Haben/Habt/Hat} Sie eine Frage gestellt?"]
     ]
   },
@@ -94,7 +97,7 @@ const polyglotCourse = [
     title: "Кто, где и когда?", pages: "51–68",
     goal: "Задай простой вопрос и скажи «меня», «мне», «с тобой» или «для тебя».",
     rules: [
-      ["Что сказать вместо названия вещи","Der Tisch → er. Die Tasche → sie. Das Buch → es."],
+      ["Кто, кого и кому","Der Tisch → er. Die Tasche → sie. Das Buch → es. Меня — mich, мне — mir."],
       ["Где, куда или когда","Сначала скажи, что хочешь узнать: Wann kommst du? Wohin gehst du?"],
       ["Где лежит, куда кладёшь","Auf dem Tisch — уже на столе. Auf den Tisch — кладёшь на стол."]
     ],
@@ -127,14 +130,18 @@ const polyglotCourse = [
       [1,"Где ты спишь?","{Wo/Wer/Wann} schläfst du?"],
       [1,"Мы пьём воду сейчас.","Wir trinken {jetzt/gestern/morgen früh} Wasser."],
       [2,"Я ставлю стакан на стол.","Ich stelle das Glas auf {den/dem/der} Tisch."],
-      [2,"Стул стоит у окна.","Der Stuhl steht {am/ans/ins} Fenster."]
+      [2,"Стул стоит у окна.","Der Stuhl steht {am/ans/ins} Fenster."],
+      [0,"Ты меня видишь?","Siehst du {mich/mir/ich}?"],
+      [0,"Он помогает мне.","Er hilft {mir/mich/ich}."],
+      [0,"Это для тебя.","Das ist für {dich/dir/du}."],
+      [0,"Я еду с ней.","Ich fahre mit {ihr/sie/ihm}."]
     ]
   },
   {
     title: "Числа, встречи и дорога", pages: "69–90",
     goal: "Договорись о дне и часе встречи и скажи, куда ты едешь.",
     rules: [
-      ["Число, день и время","Для часа бери um: um sieben. Для дня — am: am Samstag. Для месяца — im: im Mai."],
+      ["Число, день и время","Час — um sieben, день недели — am Samstag, месяц — im Mai. Возраст: 24 — vierundzwanzig. Дата: der dritte Mai, встреча — am dritten Mai."],
       ["Связываем две фразы","Und добавляет, aber значит «но», oder значит «или», denn отвечает «почему»."],
       ["Куда, откуда, до какого дня","В Берлин — nach Berlin. Из Берлина — aus Berlin. До пятницы — bis Freitag."]
     ],
@@ -158,7 +165,7 @@ const polyglotCourse = [
       [0,"Мы встречаемся в субботу.","Wir treffen uns {am/um/im} Samstag."], [0,"Сейчас 8:30.","Es ist {halb neun/halb acht/um neun}."],
       [0,"Я еду в мае.","Ich fahre {im/am/um} Mai."], [1,"Я устал, но остаюсь.","Ich bin müde, {aber/oder/denn} ich bleibe."],
       [1,"Чай или кофе?","Tee {oder/denn/aber} Kaffee?"], [1,"Он смеётся, потому что шутка смешная.","Er lacht, {denn/aber/oder} der Witz ist lustig."],
-      [1,"Она читает, а он спит.","Sie liest, aber er {schläft/schlafen/schlafst}."], [2,"Я еду в Берлин.","Ich fahre {nach/seit/aus} Berlin."],
+      [1,"Она читает, а он спит.","Sie liest, {aber/oder/denn} er schläft.","topic"], [2,"Я еду в Берлин.","Ich fahre {nach/seit/aus} Berlin."],
       [2,"Я иду к врачу.","Ich gehe {zum/vom/beim} Arzt."], [2,"Она здесь с понедельника.","Sie ist {seit/um/nach} Montag hier."],
       [2,"Мы работаем с девяти до пяти.","Wir arbeiten von neun {bis/seit/aus} fünf."], [2,"Он из Вены.","Er kommt {aus/nach/zu} Wien."],
       [0,"Ей 32 года.","Sie ist {zweiunddreissig/dreiundzwanzig/zwölf} Jahre alt."],
@@ -166,7 +173,9 @@ const polyglotCourse = [
       [1,"Я иду к врачу, потому что я болен.","Ich gehe zum Arzt, {denn/oder/aber} ich bin krank."],
       [1,"Он поёт и она танцует.","Er singt, {und/oder/denn} sie tanzt."],
       [2,"Он приехал из Граца.","Er ist {aus/nach/seit} Graz gekommen."],
-      [2,"Занятия идут до пятницы.","Der Kurs geht {bis/seit/aus} Freitag."]
+      [2,"Занятия идут до пятницы.","Der Kurs geht {bis/seit/aus} Freitag."],
+      [0,"Сегодня третье мая.","Heute ist der {dritte/dritten/drei} Mai."],
+      [0,"Мы встречаемся третьего мая.","Wir treffen uns am {dritten/dritte/drei} Mai."]
     ]
   },
   {
@@ -174,9 +183,9 @@ const polyglotCourse = [
     goal: "Попроси нужный товар, спроси цену и расскажи о покупке.",
     pastPractice: true,
     rules: [
-      ["Один предмет и несколько","Скажи вместе: der Apfel — die Äpfel. С числом: zwei Äpfel."],
+      ["Один предмет и несколько","Новый предмет: ein Geschenk. Знакомый: das Geschenk. Для нескольких выучи пару der Apfel — die Äpfel. С числом: zwei Äpfel."],
       ["Что купил и кому помог","Сравни der Kunde, den Kunden и dem Kunden. Иногда меняются сразу два слова."],
-      ["О покупке и о прошлом","Слова на -ieren не получают ge-: studieren → hat studiert."]
+      ["Покупка, прошлое и второе действие","Для заказа скажи Ich hätte gern … Для -ieren: studieren → hat studiert. Чтобы сказать «пытаюсь читать», используй Ich versuche, … zu lesen."]
     ],
     words: [
       ["der Apfel, die Äpfel","яблоко, яблоки","Ich kaufe zwei Äpfel."], ["das Buch, die Bücher","книга, книги","Die Bücher sind günstig."],
@@ -202,7 +211,10 @@ const polyglotCourse = [
       [1,"Она ждёт покупателя.","Sie wartet auf den {Kunden/Kunde/Kundes}."],
       [1,"Я говорю с покупателем.","Ich spreche mit {dem/den/der} Kunden."],
       [2,"Я хорошо зарабатывал.","Ich habe gut {verdient/geverdient/verdienen}."],
-      [2,"Мы заплатили наличными.","Wir haben bar {gezahlt/zahlen/zahlt}."]
+      [2,"Мы заплатили наличными.","Wir haben bar {gezahlt/zahlen/zahlt}."],
+      [0,"Я ищу какой-нибудь подарок.","Ich suche {ein/das/einen} Geschenk."],
+      [0,"Этот подарок для Мии.","{Das/Die/Der} Geschenk ist für Mia."],
+      [2,"Я пытаюсь читать по-немецки.","Ich versuche, Deutsch {zu lesen/lesen/lese}.",null,["Ich versuche Deutsch zu lesen."]]
     ]
   },
   {
@@ -211,7 +223,7 @@ const polyglotCourse = [
     pastPractice: true,
     rules: [
       ["Я — mich, ты — dich","Подбери пару: ich–mich, du–dich, wir–uns, ihr–euch."],
-      ["Могу, хочу, должен","Сначала скажи, что можешь или хочешь. Действие оставь на конец: Ich kann heute kommen."],
+      ["Могу, хочу, должен","Действие оставь на конец: Ich kann heute kommen. Для прошлого меняй первое слово: kann → konnte, muss → musste, will → wollte."],
       ["Чей это брат","Сравни mein Bruder, meine Schwester и meinen Bruder в Ich sehe meinen Bruder."]
     ],
     words: [
@@ -238,7 +250,10 @@ const polyglotCourse = [
       [1,"Она может сесть здесь.","Sie {kann/kannst/können} sich hier setzen."],
       [1,"Вы должны торопиться. (К нескольким друзьям.)","Ihr {müsst/muss/müssen} euch beeilen."],
       [2,"Это его мама.","Das ist {seine/sein/seinen} Mutter."],
-      [2,"Где мой брат?","Wo ist {mein/meinen/meine} Bruder?"]
+      [2,"Где мой брат?","Wo ist {mein/meinen/meine} Bruder?"],
+      [1,"Он вчера не мог прийти.","Er {konnte/kann/konntest} gestern nicht kommen."],
+      [1,"Мы хотели уйти раньше.","Wir {wollten/wollen/wolltet} früher gehen."],
+      [1,"Вам можно было остаться подольше? (К нескольким друзьям.)","{Durftet/Dürft/Durfte} ihr länger bleiben?"]
     ]
   },
   {
@@ -248,7 +263,7 @@ const polyglotCourse = [
     rules: [
       ["Поезд отправляется","Куда делось ab? В обычной фразе оно в конце: Der Zug fährt ab. Уже уехал: ist abgefahren."],
       ["Жду поезд, мечтаю о поездке","Учи вместе: warten auf den Zug, träumen von einer Reise."],
-      ["В гостинице или туда","Где? Im Hotel. Куда? Ins Hotel."]
+      ["На вокзале и в гостинице","Куда билет? Eine Fahrkarte nach Basel. Уже в гостинице? Im Hotel. Идёшь туда? Ins Hotel."]
     ],
     words: [
       ["der Bahnhof","вокзал","Ich bin am Bahnhof."], ["die Abfahrt","отправление","Die Abfahrt ist um acht."],
@@ -275,7 +290,9 @@ const polyglotCourse = [
       [1,"Ты ждёшь поезд?","Wartest du {auf/von/mit} den Zug?"],
       [1,"Он мечтает о море.","Er träumt {vom/zum/ins} Meer."],
       [2,"Мы у вокзала.","Wir sind {am/zum/ans} Bahnhof."],
-      [2,"Я еду в школу. (К зданию.)","Ich fahre {zur/zum/vom} Schule."]
+      [2,"Я еду в школу. (К зданию.)","Ich fahre {zur/zum/vom} Schule."],
+      [2,"Билет до Базеля, пожалуйста.","Eine Fahrkarte {nach/in/aus} Basel, bitte."],
+      [2,"С какого пути отправляется поезд?","{Von welchem/Welcher/Zu welchem} Gleis fährt der Zug ab?"]
     ]
   },
   {
@@ -283,7 +300,7 @@ const polyglotCourse = [
     goal: "Выбери вещь, попроси свой размер и скажи, что наденешь.",
     pastPractice: true,
     rules: [
-      ["Что ты покупаешь или ищешь","Der Mantel ist warm. Но Ich kaufe den Mantel."],
+      ["Одежда и примерка","Сравни Der Mantel ist warm и Ich kaufe den Mantel. Для примерки спроси: Kann ich das anprobieren?"],
       ["Нужен один или не нужен ни один","С Mantel: einen или keinen. С Jacke: eine или keine."],
       ["Для кого и без чего","Запомни фразами: für den Bruder, ohne den Mantel, durch den Park."]
     ],
@@ -310,7 +327,9 @@ const polyglotCourse = [
       [1,"Мне нужна рубашка.","Ich brauche {ein/einen/einem} Hemd."],
       [1,"Она не покупает куртку.","Sie kauft {keine/kein/keinen} Jacke."],
       [2,"Это для ребёнка.","Das ist für {das/dem/den} Kind."],
-      [2,"Мы гуляем без обуви.","Wir gehen {ohne/mit/bei} Schuhe spazieren."]
+      [2,"Мы гуляем без обуви.","Wir gehen {ohne/mit/bei} Schuhe spazieren."],
+      [0,"Можно это примерить?","Kann ich das {anprobieren/probiere an/anprobiert}?"],
+      [0,"У вас есть это на размер больше?","Haben Sie das eine Nummer {grösser/gross/grösste}?"]
     ]
   },
   {
@@ -320,7 +339,7 @@ const polyglotCourse = [
     rules: [
       ["Кому помогаешь или даришь","В Ich schenke dem Kind ein Buch слова dem Kind отвечают на «кому?», ein Buch — на «что?»."],
       ["Как сказать «этому» или «одному»","Dem Kind — этому ребёнку. Einem Kind — одному ребёнку. Den Kindern — детям."],
-      ["На автобусе и у кого работаешь","Скажи целиком: mit dem Bus, bei einer Firma, aus dem Büro."]
+      ["Дорога, работа и учёба","Запоминай целиком: mit dem Bus, bei einer Firma, aus dem Büro, an der Universität."]
     ],
     words: [
       ["die Kollegin","коллега","Ich zeige der Kollegin den Plan."], ["der Unterricht","занятия, урок","Der Unterricht beginnt um neun."],
@@ -346,7 +365,8 @@ const polyglotCourse = [
       [1,"Мы помогаем одному ребёнку.","Wir helfen {einem/ein/einen} Kind."],
       [1,"Он показывает одной подруге фото.","Er zeigt {einer/eine/einen} Freundin ein Foto."],
       [2,"Он живёт у родителей.","Er wohnt bei {den/die/dem} Eltern."],
-      [2,"Она едет в школу на трамвае.","Sie fährt mit {der/die/den} Tram zur Schule."]
+      [2,"Она едет в школу на трамвае.","Sie fährt mit {der/die/den} Tram zur Schule."],
+      [2,"Я учусь в Цюрихском университете.","Ich studiere {an der/an die/aus der} Universität Zürich."]
     ]
   },
   {
@@ -354,9 +374,9 @@ const polyglotCourse = [
     goal: "Расскажи, что любишь делать, и начни фразу с «я», «сегодня» или «в парке».",
     pastPractice: true,
     rules: [
-      ["Как начать с дня или места","Произнеси по частям: Am Samstag | spiele | ich Fussball."],
+      ["Как начать с дня, места или условия","После Am Samstag или целого Wenn es regnet поставь слово про действие: Am Samstag spiele ich Fussball. Wenn es regnet, bleiben wir zu Hause."],
       ["Что остаётся в конце","Сравни Heute sehe ich fern и Gestern habe ich ferngesehen. Последнее слово отделено от изменяемого."],
-      ["Расскажи, что любишь","Ich male gern — я люблю рисовать. Ich tanze lieber — танцевать люблю больше."]
+      ["Расскажи, что любишь","Ich male gern — я люблю рисовать. Если само занятие становится названием, добавь das и пиши с большой буквы: das Kochen."]
     ],
     words: [
       ["gern","с удовольствием, охотно","Ich male gern."], ["lieber","охотнее","Ich tanze lieber."],
@@ -387,15 +407,17 @@ const polyglotCourse = [
       [1,"Вчера она посмотрела телевизор. Начни с Gestern.","Gestern hat sie {ferngesehen/gesehen fern/fernsehen}."],
       [1,"Сегодня он хочет петь. Начни с Heute.","Heute will er {singen/singt/gesungen}."],
       [2,"Мне нравится рисовать.","Ich male {gern/nicht gern/ungern}."],
-      [2,"Я лучше поплаваю, чем побегаю.","Ich schwimme {lieber/mehr gern/am lieber}, als ich laufe."]
+      [2,"Я лучше поплаваю, чем побегаю.","Ich schwimme {lieber/mehr gern/am lieber}, als ich laufe."],
+      [0,"Если пойдёт дождь, мы останемся дома. Начни с Wenn es regnet.","Wenn es regnet, {bleiben wir/wir bleiben/bleibt wir} zu Hause."],
+      [2,"Мне нравится готовить. Начни с названия занятия.","Das {Kochen/kocht/koche} macht mir Spass."]
     ]
   },
   {
     title: "Погода, цвета и сравнения", pages: "205–224",
     goal: "Опиши погоду и цвет, а затем скажи, что теплее, выше или лучше.",
     rules: [
-      ["Цвет и погода","Скажи Die Jacke ist blau или Es ist windig. Слова blau и windig здесь остаются как есть."],
-      ["Теплее, чем, или так же тепло","Скажи два края: Heute sehe ich … fern. Gestern habe ich … ferngesehen."],
+      ["Цвет и погода","После ist скажи Die Jacke ist blau. Перед названием вещи у цвета есть окончание: das weisse Hemd."],
+      ["Теплее, чем, или так же тепло","Теплее — wärmer als gestern. Так же тепло — so warm wie gestern. Теплее всего — am wärmsten."],
       ["Уже холодно или становится холодно","Es ist kalt — уже холодно. Es wird kalt — становится холодно."]
     ],
     words: [
@@ -423,7 +445,7 @@ const polyglotCourse = [
       [1,"Сегодня холоднее, чем в понедельник.","Heute ist es kälter {als/so/wie} am Montag."],
       [1,"Сегодня самый ветреный день.","Heute ist es am {windigsten/windiger/windig}."],
       [2,"Становится тепло.","Es {wird/werden/hat} warm."],
-      [2,"Дождь начался.","Der Regen hat {begonnen/beginnt/beginn}."]
+      [2,"Вчера шёл дождь. Начни с Gestern.","Gestern hat es {geregnet/regnet/regnen}.","topic"]
     ]
   },
   {
@@ -431,7 +453,7 @@ const polyglotCourse = [
     goal: "Закажи еду и скажи, какой суп, хлеб или напиток хочешь.",
     rules: [
       ["Какой салат или какая суповая порция","Сравни den frischen Salat, die frische Suppe и das frische Brot."],
-      ["Короткие слова меняют описание","Теплее — wärmer als gestern. Так же тепло — so warm wie gestern. Теплее всего — am wärmsten."],
+      ["Короткие слова меняют описание","Сравни ein kaltes Getränk и einen kleinen Salat. После mit с dem или einer здесь будет -en: mit dem frischen Brot."],
       ["Как заказать","Начни Ich hätte gern. Добавь, что хочешь заказать."]
     ],
     words: [
@@ -470,8 +492,8 @@ const polyglotCourse = [
     title: "Город и как найти дорогу", pages: "241–260",
     goal: "Спроси дорогу и объясни, когда, как часто или насколько что-то происходит.",
     rules: [
-      ["Какой салат, суп или хлеб","Начал с Heute? Следом скажи, что делаешь: Heute gehe ich ins Museum."],
-      ["Слишком или достаточно","Zu перед словом: zu langsam. Genug после слова: schnell genug."],
+      ["Когда и как часто","Oft — часто, selten — редко. Noch — всё ещё, schon — уже. Если начал с Heute, дальше поставь слово про действие: Heute gehe ich ins Museum."],
+      ["Слишком, достаточно или быстрее","Zu стоит перед словом: zu langsam. Genug — после: schnell genug. Для сравнения: schneller als ich."],
       ["Как пройти","Назови шаги по очереди: zuerst geradeaus, dann nach links."]
     ],
     words: [
@@ -531,7 +553,7 @@ const polyglotCourse = [
       [1,"О чём ты мечтаешь?","{Wovon/Womit/Worauf} träumst du?"],
       [1,"Кого вы ждёте?","Auf {wen/wem/was} wartet ihr?"],
       [2,"Я жду этого. (Речь о событии.)","Ich warte {darauf/damit/daran}."],
-      [2,"Она звонит ему.","Sie ruft {ihn/damit/darüber} an."]
+      [2,"Ваза стоит на нём. (О столе.)","Die Vase steht {darauf/damit/darüber}.","topic"]
     ]
   },
   {
@@ -540,7 +562,7 @@ const polyglotCourse = [
     rules: [
       ["Что-то, кто-то, где-то","Для людей: jemand и niemand. Для вещей: etwas и nichts. Для места: irgendwo и nirgends."],
       ["Нет вещи или не делаю","Сравни Ich habe kein Fahrrad и Ich komme nicht."],
-      ["Скажи, что нужно сделать","Одному: Komm! Нескольким: Kommt! Вежливо: Kommen Sie bitte!"]
+      ["Скажи, что нужно сделать","Одному: Komm! Нескольким: Kommt! Вежливо: Kommen Sie bitte! Если есть короткая часть вроде an, оставь её в конце: Ruf mich an!"]
     ],
     words: [
       ["etwas","что-то","Ich höre etwas."], ["niemand","никто","Hier ist niemand."],
@@ -592,7 +614,7 @@ const polyglotCourse = [
       [0,"Я голоден.","Ich {habe/bin/ist} Hunger."], [0,"Ты хочешь пить?","{Hast/Bist/Habt} du Durst?"],
       [0,"У неё нет времени.","Sie hat {keine/kein/keinen} Zeit."], [0,"Ты прав.","Du {hast/bist/hat} Recht."],
       [1,"Мы готовы.","Wir {sind/haben/ist} bereit."], [1,"Она довольна.","Sie {ist/hat/bist} zufrieden."],
-      [1,"Мне холодно.","{Mir/Mich/Ich} ist kalt."], [1,"Это важно.","Es {ist/hat/sind} wichtig."],
+      [1,"Я начинаю уставать.","Ich {werde/bin/habe} müde.","topic"], [1,"Ты завтра участвуешь?","{Bist/Hast/Seid} du morgen dabei?","topic"],
       [2,"У неё короткие волосы.","Sie hat {kurze/kurz/kurzen} Haare."], [2,"Он носит очки.","Er trägt {eine/ein/einen} Brille."],
       [2,"Её глаза голубые.","Ihre Augen sind {blau/blaue/blauen}."], [2,"Он высокого роста.","Er ist {gross/grosser/grossen}."],
       [0,"Я хочу пить.","Ich {habe/bin/hat} Durst."],

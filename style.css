@@ -165,6 +165,29 @@ h1 { font-size: clamp(2rem, 5vw, 3.55rem); line-height: 1.1; text-wrap: balance;
 #overview { display: grid; gap: var(--section-gap); }
 .lesson-list h2 { margin-bottom: var(--space-4); font-size: 1.1rem; }
 .home-modes, .hub-list { display: grid; gap: var(--space-3); }
+.home-primary { display: grid; grid-auto-rows: 1fr; gap: var(--space-4); }
+.home-primary .destination {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  padding-block: var(--space-5);
+  border: 1px solid var(--line);
+}
+.home-primary .menu-arrow { align-self: center; }
+.home-grammar-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-block-start: var(--space-4);
+  color: var(--muted);
+  font-size: .9rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.home-grammar-link:hover { color: var(--ink); }
+@media (min-width: 800px) {
+  .home-primary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 .destination { display: flex; justify-content: space-between; align-items: center; min-height: 77px; gap: var(--space-4); padding: var(--space-4) clamp(var(--space-4), 3vw, var(--space-6)); border-radius: var(--card-radius); background: var(--soft); transition: background-color 180ms var(--ease); }
 .destination strong, .destination small { display: block; }
 .destination strong { font-size: clamp(1.15rem, 3vw, 1.4rem); }
@@ -417,12 +440,13 @@ input[type="file"] { max-width: 100%; padding: var(--space-2); }
 .polyglot-tabs a:hover { background: var(--soft); }
 .polyglot-tabs a[aria-current] { background: transparent; border-bottom-color: var(--ink); color: var(--ink); }
 #polyglot-view .polyglot-tabs + .polyglot-body { margin-block-start: clamp(var(--space-6), 4vw, var(--space-8)); }
-.polyglot-lesson-list, .polyglot-word-list, .polyglot-final { display: grid; gap: var(--space-2); padding: 0; margin: var(--space-3) 0 0; list-style: none; }
+.polyglot-lesson-list, .polyglot-final { display: grid; gap: var(--space-2); padding: 0; margin: var(--space-3) 0 0; list-style: none; }
 .polyglot-lesson { display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); min-height: 56px; border-radius: 8px; padding: var(--space-3); background: var(--soft); }
 a.polyglot-lesson:hover { background: #ededee; }
 .polyglot-lesson.is-locked { background: var(--paper); border: 1px solid var(--line); color: var(--muted); }
 .polyglot-lesson-number { font-variant-numeric: tabular-nums; color: var(--muted); }
-.polyglot-word-list li > * + *, .polyglot-card > * + *, .polyglot-rule > * + *, .polyglot-final details { margin-block-start: var(--space-3); }
+.polyglot-card > * + *, .polyglot-card [data-card-answer] ~ *, .polyglot-rule > * + *, .polyglot-final details { margin-block-start: var(--space-3); }
+.polyglot-card > div:empty { display: none; }
 .polyglot-body > * + * { margin-block-start: var(--space-4); }
 .polyglot-tip { border-radius: 8px; background: var(--soft); padding: var(--space-3); }
 .polyglot-theory-examples { display: grid; gap: var(--space-2); padding-inline-start: var(--space-3); border-inline-start: 2px solid var(--line); }
@@ -434,19 +458,12 @@ a.polyglot-lesson:hover { background: #ededee; }
 .polyglot-theory-table thead { background: var(--soft); }
 .polyglot-theory-table tbody tr { border-block-start: 1px solid var(--line); }
 .polyglot-theory-table th:first-child { min-width: 5rem; }
-.polyglot-progress { display: block; width: 100%; height: .5rem; appearance: none; border: 0; border-radius: 8px; background: var(--line); accent-color: var(--ink); }
+.polyglot-progress { --progress-fill: #2b794f; display: block; width: 100%; height: .5rem; appearance: none; border: 0; border-radius: 8px; background: var(--line); accent-color: var(--progress-fill); }
 .polyglot-progress::-webkit-progress-bar { background: var(--line); border-radius: 8px; }
-.polyglot-progress::-webkit-progress-value { background: var(--ink); border-radius: 8px; }
-.polyglot-progress::-moz-progress-bar { background: var(--ink); border-radius: 8px; }
+.polyglot-progress::-webkit-progress-value { background: var(--progress-fill); border-radius: 8px; }
+.polyglot-progress::-moz-progress-bar { background: var(--progress-fill); border-radius: 8px; }
 .polyglot-body .practice-progress + .polyglot-progress { margin-block-start: 0; }
 .polyglot-mastery strong { color: var(--ink); font-size: 1rem; font-variant-numeric: tabular-nums; }
-.polyglot-skills { padding: var(--space-2) var(--space-3); background: var(--soft); border-radius: 8px; }
-.polyglot-skills summary { min-height: 36px; display: list-item; align-content: center; }
-.polyglot-skills ul { list-style: none; margin: 0; padding: 0; }
-.polyglot-skills li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-1) var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--line); }
-.polyglot-skills strong { font-size: .85rem; }
-.polyglot-skills strong.muted { font-weight: 400; }
-.polyglot-skill { font-size: .9rem; }
 .theory-index.polyglot-theory-index { margin-block-end: 0; padding: 0; background: transparent; }
 .polyglot-theory-index ul { gap: var(--space-1) var(--space-4); }
 .polyglot-theory-index button { width: 100%; justify-content: flex-start; text-align: start; font-weight: 500; border: 0; background: transparent; }
@@ -460,6 +477,13 @@ a.polyglot-lesson:hover { background: #ededee; }
 .polyglot-reading { display: grid; gap: var(--space-4); list-style: none; padding: 0; }
 .polyglot-reading li > * + * { margin-block-start: var(--space-2); }
 .polyglot-reading .polyglot-audio-status:empty { display: none; }
+.polyglot-reference { border-block-end: 1px solid var(--line); padding-block-end: var(--space-3); }
+.polyglot-reference summary { min-height: 44px; align-content: center; }
+.polyglot-reference-inline h3, .polyglot-reference h3 { margin-block-end: var(--space-2); font-size: 1rem; }
+.polyglot-reference .polyglot-reference { margin-inline-start: var(--space-3); }
+.polyglot-reference .polyglot-reference:last-child { border: 0; padding-block-end: 0; }
+.polyglot-reference h4 { margin: var(--space-4) 0 var(--space-2); font-size: 1rem; }
+:is(.polyglot-reference, .polyglot-reference-inline) td { min-width: 4rem; }
 .polyglot-audio-status:empty { margin: 0; }
 @media (max-width: 600px) {
   .polyglot-theory-examples { grid-template-columns: minmax(0, 1fr); }
